@@ -18,6 +18,9 @@ export const surveyModule: ModuleProvider = {
     if (views.length === 0) return { visible: false };
 
     const pending = views.filter((v) => v.state === "pending").length;
+    // Sorğuları idarə edənlər (yaradanlar) iştirak edə bilər, amma onlardan cavab "gözlənilmir":
+    // popup, badge və prominent kart yalnız adi istifadəçilər üçündür.
+    const optional = hasPermission(user, "survey.manage");
 
     const cards: DashboardCard[] = views
       // Dashboard-da yalnız real iş tələb edənlər və açıq nəticələr — "cavab verdim" kartları səs-küydür.
@@ -27,7 +30,7 @@ export const surveyModule: ModuleProvider = {
         return {
           kind: "survey",
           key: `survey:${v.survey.id}`,
-          priority: v.state === "pending" ? 100 + (isDeadlineNear(left) ? 10 : 0) : 20,
+          priority: v.state === "pending" && !optional ? 100 + (isDeadlineNear(left) ? 10 : 0) : 20,
           data: {
             id: v.survey.id,
             title: v.survey.title,
@@ -39,13 +42,14 @@ export const surveyModule: ModuleProvider = {
             isNew: v.state === "pending" && isNewSurvey(v.survey, now),
             deadlineNear: v.state === "pending" && isDeadlineNear(left),
             state: v.state,
+            optional,
           },
         };
       });
 
     return {
       visible: true,
-      badge: pending,
+      badge: optional ? 0 : pending,
       nav: { label: "Sorğular", href: "/surveys", icon: "survey", section: "main", order: 20 },
       cards,
     };

@@ -44,7 +44,7 @@ export default async function DashboardPage() {
   const { cards, modules } = await resolveModules(user);
 
   const surveyModule = modules.find((m) => m.key === "survey");
-  const firstPending = cards.find((c) => c.kind === "survey" && c.data.state === "pending");
+  const firstPending = cards.find((c) => c.kind === "survey" && c.data.state === "pending" && !c.data.optional);
   const firstName = user.name.split(" ")[0];
 
   return (

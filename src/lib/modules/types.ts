@@ -53,6 +53,8 @@ export interface SurveyCardData {
   isNew: boolean;
   deadlineNear: boolean;
   state: "pending" | "answered" | "results";
+  /** İştirak könüllüdür (məs. sorğunu idarə edən admin): popup və prominent kart göstərilmir */
+  optional: boolean;
 }
 
 export interface ModuleResolution {

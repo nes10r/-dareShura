@@ -52,6 +52,24 @@ export function SurveyCard({ data }: { data: SurveyCardData }) {
     );
   }
 
+  if (data.optional) {
+    return (
+      <Link
+        href={`/surveys/${data.id}`}
+        className="group flex items-center gap-4 rounded-2xl border border-line bg-white p-4 transition hover:border-brand-200 hover:shadow-sm"
+      >
+        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
+          <Icon name="survey" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs font-medium text-muted">İstəyə bağlı iştirak · {data.questionCount} sual</span>
+          <span className="mt-0.5 block truncate font-semibold">{data.title}</span>
+        </span>
+        <Icon name="chevron-right" className="size-5 text-muted transition group-hover:translate-x-0.5" />
+      </Link>
+    );
+  }
+
   return (
     <article className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-700 to-brand-900 p-5 text-white shadow-lg shadow-brand-900/20 sm:p-6">
       <div className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-white/10 blur-2xl" />
