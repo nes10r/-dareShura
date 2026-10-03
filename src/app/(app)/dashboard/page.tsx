@@ -4,6 +4,7 @@ import { SurveyCard } from "@/components/dashboard/SurveyCard";
 import { SurveyPrompt } from "@/components/dashboard/SurveyPrompt";
 import { Icon } from "@/components/Icon";
 import { requireUser } from "@/lib/auth";
+import { listPublishedNews } from "@/lib/db/repo";
 import { daysLeftLabel, formatDate } from "@/lib/format";
 import { resolveModules } from "@/lib/modules/registry";
 import type { DashboardCard, IconName } from "@/lib/modules/types";
@@ -26,22 +27,16 @@ function renderCard(card: DashboardCard) {
   }
 }
 
-const ANNOUNCEMENTS = [
-  { date: "2026-10-01", title: "Payız semestri üzrə Şura iclaslarının qrafiki təsdiqləndi" },
-  { date: "2026-09-24", title: "Elmi adların verilməsi üzrə sənəd qəbulu başlayır" },
-  { date: "2026-09-15", title: "Rəqəmsal platformanın pilot mərhələsi başladı" },
-];
-
-const QUICK_LINKS: { icon: IconName; label: string; text: string }[] = [
+const QUICK_LINKS: { icon: IconName; label: string; text: string; href?: string }[] = [
   { icon: "file", label: "Əsasnamə", text: "Şuranın fəaliyyət qaydaları" },
   { icon: "users", label: "Şura üzvləri", text: "Tərkib və əlaqə" },
   { icon: "calendar", label: "İclas qrafiki", text: "2026/2027 tədris ili" },
-  { icon: "megaphone", label: "Elanlar", text: "Bütün elanlar" },
+  { icon: "megaphone", label: "Elanlar", text: "Bütün elanlar", href: "/xeberler" },
 ];
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const { cards, modules } = await resolveModules(user);
+  const [{ cards, modules }, news] = await Promise.all([resolveModules(user), listPublishedNews(3)]);
 
   const surveyModule = modules.find((m) => m.key === "survey");
   const firstPending = cards.find((c) => c.kind === "survey" && c.data.state === "pending" && !c.data.optional);
@@ -101,15 +96,21 @@ export default async function DashboardPage() {
         </section>
 
         <section className="rounded-2xl bg-white p-5 ring-1 ring-line lg:col-span-2">
-          <h2 className="font-semibold">Elanlar</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">Xəbərlər və elanlar</h2>
+            <Link href="/xeberler" className="text-sm font-semibold text-brand-700">Hamısı</Link>
+          </div>
           <ul className="mt-2 divide-y divide-line">
-            {ANNOUNCEMENTS.map((a) => (
-              <li key={a.title} className="flex gap-3 py-3">
-                <span className="mt-1.5 size-2 shrink-0 rounded-full bg-brand-500" />
-                <div>
-                  <p className="text-sm font-medium leading-snug">{a.title}</p>
-                  <p className="mt-0.5 text-xs text-muted">{formatDate(a.date)}</p>
-                </div>
+            {news.length === 0 && <li className="py-3 text-sm text-muted">Hələ xəbər yoxdur.</li>}
+            {news.map((a) => (
+              <li key={a.id}>
+                <Link href={`/xeberler/${a.slug}`} className="flex gap-3 py-3 hover:text-brand-700">
+                  <span className="mt-1.5 size-2 shrink-0 rounded-full bg-brand-500" />
+                  <span>
+                    <span className="block text-sm font-medium leading-snug">{a.title}</span>
+                    <span className="mt-0.5 block text-xs text-muted">{a.category} · {formatDate(a.publishedAt)}</span>
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>
@@ -119,15 +120,22 @@ export default async function DashboardPage() {
       <section className="mt-6">
         <h2 className="mb-3 font-semibold">Faydalı keçidlər</h2>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {QUICK_LINKS.map((l) => (
-            <div key={l.label} className="rounded-2xl bg-white p-4 ring-1 ring-line">
-              <span className="grid size-10 place-items-center rounded-xl bg-brand-50 text-brand-700">
-                <Icon name={l.icon} />
-              </span>
-              <p className="mt-3 text-sm font-semibold">{l.label}</p>
-              <p className="text-xs text-muted">{l.text}</p>
-            </div>
-          ))}
+          {QUICK_LINKS.map((l) => {
+            const body = (
+              <>
+                <span className="grid size-10 place-items-center rounded-xl bg-brand-50 text-brand-700">
+                  <Icon name={l.icon} />
+                </span>
+                <p className="mt-3 text-sm font-semibold">{l.label}</p>
+                <p className="text-xs text-muted">{l.text}</p>
+              </>
+            );
+            return l.href ? (
+              <Link key={l.label} href={l.href} className="rounded-2xl bg-white p-4 ring-1 ring-line transition hover:ring-brand-200">{body}</Link>
+            ) : (
+              <div key={l.label} className="rounded-2xl bg-white p-4 ring-1 ring-line">{body}</div>
+            );
+          })}
         </div>
       </section>
 

@@ -1,5 +1,5 @@
 import { boolean, index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import type { AnswerValue, Audience, Question, ResultsVisibility, Role, SurveyStatus } from "../types";
+import type { AnswerValue, Audience, NewsCategory, Question, ResultsVisibility, Role, SurveyStatus } from "../types";
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 
@@ -49,4 +49,23 @@ export const surveyResponses = pgTable(
   },
   // Bir istifadəçi bir sorğuya yalnız bir dəfə cavab verə bilər — DB səviyyəsində zəmanət
   (t) => [uniqueIndex("survey_responses_survey_user_uq").on(t.surveyId, t.userId), index("survey_responses_user_idx").on(t.userId)],
+);
+
+export const news = pgTable(
+  "news",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    summary: text("summary").notNull().default(""),
+    body: text("body").notNull().default(""),
+    category: text("category").$type<NewsCategory>().notNull().default("Xəbər"),
+    coverImage: text("cover_image"),
+    isPublished: boolean("is_published").notNull().default(false),
+    publishedAt: ts("published_at"),
+    createdBy: text("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("news_published_idx").on(t.isPublished, t.publishedAt)],
 );

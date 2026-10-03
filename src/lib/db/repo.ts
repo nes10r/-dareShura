@@ -1,7 +1,7 @@
-import { and, asc, count, desc, eq } from "drizzle-orm";
-import type { AnswerValue, Survey, SurveyResponse, User } from "../types";
+import { and, asc, count, desc, eq, lte } from "drizzle-orm";
+import type { AnswerValue, NewsItem, Survey, SurveyResponse, User } from "../types";
 import { db } from "./client";
-import { surveyResponses, surveys, users } from "./schema";
+import { news, surveyResponses, surveys, users } from "./schema";
 
 /**
  * Verilənlər bazası ilə bütün iş bu qatdan keçir.
@@ -125,4 +125,57 @@ export async function countResponsesBySurvey() {
     .from(surveyResponses)
     .groupBy(surveyResponses.surveyId);
   return new Map(rows.map((r) => [r.surveyId, Number(r.n)]));
+}
+
+// ---------- News ----------
+
+type NewsRow = typeof news.$inferSelect;
+const toNews = (r: NewsRow): NewsItem => ({
+  ...r,
+  publishedAt: iso(r.publishedAt),
+  createdAt: r.createdAt.toISOString(),
+  updatedAt: r.updatedAt.toISOString(),
+});
+
+const fromNews = (n: NewsItem): typeof news.$inferInsert => ({
+  ...n,
+  publishedAt: date(n.publishedAt),
+  createdAt: new Date(n.createdAt),
+  updatedAt: new Date(n.updatedAt),
+});
+
+export async function listPublishedNews(limit?: number) {
+  const q = db
+    .select()
+    .from(news)
+    .where(and(eq(news.isPublished, true), lte(news.publishedAt, new Date())))
+    .orderBy(desc(news.publishedAt));
+  return (await (limit ? q.limit(limit) : q)).map(toNews);
+}
+
+export async function getPublishedNewsBySlug(slug: string) {
+  const [row] = await db.select().from(news).where(and(eq(news.slug, slug), eq(news.isPublished, true))).limit(1);
+  return row && row.publishedAt && row.publishedAt <= new Date() ? toNews(row) : null;
+}
+
+export async function listAllNews() {
+  return (await db.select().from(news).orderBy(desc(news.updatedAt))).map(toNews);
+}
+
+export async function getNews(id: string) {
+  const [row] = await db.select().from(news).where(eq(news.id, id)).limit(1);
+  return row ? toNews(row) : null;
+}
+
+export async function insertNews(item: NewsItem) {
+  await db.insert(news).values(fromNews(item));
+}
+
+export async function updateNews(item: NewsItem) {
+  const { id, ...rest } = fromNews(item);
+  await db.update(news).set(rest).where(eq(news.id, id!));
+}
+
+export async function deleteNews(id: string) {
+  await db.delete(news).where(eq(news.id, id));
 }

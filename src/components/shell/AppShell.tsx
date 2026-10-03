@@ -39,7 +39,12 @@ export function AppShell({ user, nav, children }: { user: ShellUser; nav: NavEnt
   const admin = nav.filter((n) => n.section === "admin");
   const main = [HOME, ...dynamicMain, PROFILE];
   // Mobil alt naviqasiya: əsas bəndlər + (varsa) idarəetmə, profil sonda
-  const mobile = [HOME, ...dynamicMain, ...admin.map((a) => ({ ...a, label: "İdarəetmə" })), PROFILE];
+  const mobile: NavEntry[] = [
+    HOME,
+    ...dynamicMain,
+    ...(admin.length ? [{ key: "admin", label: "İdarəetmə", href: "/admin", icon: "settings", section: "admin", order: 900 } as NavEntry] : []),
+    PROFILE,
+  ];
 
   return (
     <div className="min-h-dvh lg:flex">

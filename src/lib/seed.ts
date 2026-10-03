@@ -1,5 +1,5 @@
 import { hashPassword } from "./password";
-import type { AnswerValue, Audience, SeedData, Question, Survey, SurveyResponse, User } from "./types";
+import type { AnswerValue, Audience, NewsItem, SeedData, Question, Survey, SurveyResponse, User } from "./types";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -209,5 +209,36 @@ export function createSeed(): SeedData {
     }, 0),
   );
 
-  return { users, surveys: [platformSurvey, seminarSurvey, scheduledSurvey, draftSurvey, template], responses };
+  const article = (id: string, slug: string, title: string, category: NewsItem["category"], coverImage: string, daysAgo: number, summary: string, body: string): NewsItem => ({
+    id, slug, title, category, coverImage, summary, body,
+    isPublished: true, publishedAt: iso(-daysAgo), createdBy: "u_super", createdAt: iso(-daysAgo), updatedAt: iso(-daysAgo),
+  });
+
+  // Demo xəbərlər — admin panelindən redaktə və ya silinə bilər
+  const news: NewsItem[] = [
+    article("n_launch", "alimler-surasinin-reqemsal-platformasi-istifadeye-verildi",
+      "Alimlər Şurasının rəqəmsal platforması istifadəyə verildi", "Xəbər", "/images/campus-aerial.jpg", 1,
+      "Şura üzvləri artıq iclas materiallarına, sorğulara və elanlara vahid platformadan çıxış əldə edir.",
+      [
+        "UNEC Alimlər Şurasının rəqəmsal platforması pilot rejimdə istifadəyə verildi.",
+        "Platforma Şura üzvlərinə elanları izləmək, sorğularda iştirak etmək və gələcəkdə iclas materialları ilə işləmək üçün vahid məkan yaradır. Platforma mobil cihazlardan rahat istifadə nəzərə alınmaqla hazırlanıb.",
+        "Təklif və iradlarınızı platformadakı sorğu vasitəsilə bildirə bilərsiniz.",
+      ].join("\n\n")),
+    article("n_survey", "platformanin-funksionalliqlari-uzre-sorgu-baslayir",
+      "Platformanın funksionallıqları üzrə sorğu başlayır", "Elan", "/images/campus-cube.jpg", 2,
+      "Şura üzvlərindən platformanın inkişaf istiqamətlərinə dair rəy toplanır.",
+      [
+        "Platformanın hansı funksiyalarla inkişaf etdiriləcəyini müəyyənləşdirmək məqsədilə Şura üzvləri arasında sorğu keçirilir.",
+        "Sorğu təxminən 4 dəqiqə çəkir. Kabinetinizə daxil olduqda sorğu avtomatik olaraq göstəriləcək.",
+      ].join("\n\n")),
+    article("n_meetings", "sura-iclaslarinin-qrafiki-platformada-derc-olunacaq",
+      "Şura iclaslarının qrafiki platformada dərc olunacaq", "İclas", "/images/campus-courtyard.jpg", 6,
+      "Növbəti iclasların tarixləri və gündəliyi bu bölmədə elan ediləcək.",
+      [
+        "Alimlər Şurasının iclaslarının qrafiki və gündəliyi bundan sonra platformanın Xəbərlər bölməsində dərc olunacaq.",
+        "Yeni elanlardan xəbərdar olmaq üçün bölməni mütəmadi izləyin.",
+      ].join("\n\n")),
+  ];
+
+  return { users, surveys: [platformSurvey, seminarSurvey, scheduledSurvey, draftSurvey, template], responses, news };
 }

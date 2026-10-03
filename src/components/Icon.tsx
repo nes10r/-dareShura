@@ -61,6 +61,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M8 11V7a4 4 0 1 1 8 0v4" />
     </>
   ),
+  newspaper: (
+    <>
+      <path d="M4 5h13v14a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2V5Z" />
+      <path d="M17 9h3v10a2 2 0 0 1-4 0M8 9h5M8 13h5M8 17h3" />
+    </>
+  ),
   users: (
     <>
       <circle cx="9" cy="8" r="3.5" />

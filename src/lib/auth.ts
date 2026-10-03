@@ -72,11 +72,11 @@ export async function requireUser(): Promise<User> {
 
 // ---- İcazələr ----
 
-export type Permission = "survey.manage";
+export type Permission = "survey.manage" | "news.manage";
 
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
-  SUPER_ADMIN: ["survey.manage"],
-  ADMIN: ["survey.manage"],
+  SUPER_ADMIN: ["survey.manage", "news.manage"],
+  ADMIN: ["survey.manage", "news.manage"],
   MEMBER: [],
 };
 

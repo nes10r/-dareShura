@@ -80,6 +80,7 @@ export interface SeedData {
   users: User[];
   surveys: Survey[];
   responses: SurveyResponse[];
+  news: NewsItem[];
 }
 
 export const ROLE_LABELS: Record<Role, string> = {
@@ -94,4 +95,30 @@ export const FACULTIES = [
   "Maliyyə və mühasibat",
   "İqtisadiyyat və idarəetmə",
   "Beynəlxalq iqtisadiyyat",
+] as const;
+
+export const NEWS_CATEGORIES = ["Xəbər", "Elan", "İclas", "Tədbir"] as const;
+export type NewsCategory = (typeof NEWS_CATEGORIES)[number];
+
+export interface NewsItem {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  body: string;
+  category: NewsCategory;
+  coverImage: string | null;
+  isPublished: boolean;
+  publishedAt: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Xəbər üçün hazır üz qabığı şəkilləri (public/images) */
+export const NEWS_COVER_PRESETS = [
+  { src: "/images/campus-aerial.jpg", label: "Kampus" },
+  { src: "/images/campus-cube.jpg", label: "UNEC kub" },
+  { src: "/images/campus-courtyard.jpg", label: "Həyət" },
+  { src: "/images/unec-logo.jpg", label: "Loqo" },
 ] as const;

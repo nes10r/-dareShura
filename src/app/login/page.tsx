@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import { getSessionUser } from "@/lib/auth";
@@ -11,13 +12,15 @@ export default async function LoginPage() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-white lg:flex-row">
-      <aside className="hidden flex-1 flex-col justify-between bg-gradient-to-br from-brand-900 to-brand-700 p-10 text-white lg:flex">
-        <Logo light />
-        <div>
+      <aside className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-brand-900 p-10 text-white lg:flex">
+        <Image src="/images/campus-cube.jpg" alt="" fill sizes="50vw" priority className="object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-900 via-brand-900/60 to-brand-900/30" />
+        <div className="relative"><Logo light /></div>
+        <div className="relative">
           <h2 className="max-w-md text-3xl font-bold leading-tight">Şura işləri — bir yerdə, hər yerdən.</h2>
           <p className="mt-3 max-w-md text-brand-100">Sizə aid iclaslar, sorğular və tapşırıqlar daxil olan kimi dashboard-da görünəcək.</p>
         </div>
-        <p className="text-sm text-brand-200">© UNEC</p>
+        <p className="relative text-sm text-white/60">© UNEC</p>
       </aside>
 
       <main className="flex flex-1 flex-col px-4 pb-8 pt-6 sm:items-center sm:justify-center">

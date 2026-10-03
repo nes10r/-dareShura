@@ -23,6 +23,12 @@ Demo hesablar (şifrə `Demo1234`):
 | nigar@unec.edu.az | Ona ünvanlanan sorğu yoxdur → "Sorğular" modulu tam gizlidir |
 | superadmin@unec.edu.az | "Sorğuların idarə edilməsi" həmişə görünür |
 
+## Landing və Xəbərlər
+
+- Hero: YouTube videosunun 10–52-ci saniyələri səssiz fon kimi dövr edir (`components/landing/HeroVideo.tsx`), yüklənənə qədər kampus şəkli göstərilir.
+- Xəbərlər `news` cədvəlində saxlanılır; superadmin/admin `İdarəetmə → Xəbərlərin idarə edilməsi` bölməsindən yazır, dərc edir, silir.
+- İctimai səhifələr: `/xeberler` (kateqoriya filtri ilə) və `/xeberler/[slug]`.
+
 ## Dynamic Module Architecture
 
 Naviqasiya və dashboard statik deyil — hər sorğuda modul provider-lərindən generasiya olunur.
