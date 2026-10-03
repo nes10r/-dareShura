@@ -14,14 +14,23 @@ npm run dev
 
 `DATABASE_URL` boş qalarsa, lokal inkişafda `./data/pglite` qovluğunda daxili PostgreSQL (PGlite) istifadə olunur.
 
-Demo hesablar (şifrə `Demo1234`):
+`npm run db:seed` boş bazada superadmin (`superadmin@unec.edu.az`), əsas sorğu, şablon və başlanğıc xəbərləri yaradır.
+Superadmin şifrəsi `SUPERADMIN_PASSWORD` mühit dəyişənindən götürülür, yoxdursa təsadüfi yaradılıb bir dəfə ekrana çıxarılır.
+`--reset` bütün istifadəçi və məlumatları silir — real istifadədə işlətməyin.
 
-| E-poçt | Vəziyyət |
+## İstifadəçilər və qeydiyyat
+
+1. Admin və ya superadmin **İdarəetmə → Qeydiyyat linki** bölməsində 24 saatlıq link yaradır və paylaşır.
+   Yeni link yaradılanda əvvəlki avtomatik deaktiv olur; link əl ilə də deaktiv edilə bilər.
+2. İstifadəçi `/register?token=...` linki ilə yalnız `@unec.edu.az` e-poçtu ilə qeydiyyatdan keçir (rolu: Şura üzvü).
+   Linksiz və ya müddəti bitmiş linklə qeydiyyat mümkün deyil; yoxlama server tərəfində aparılır.
+3. Superadmin **İdarəetmə → İstifadəçilər** bölməsində istifadəçiləri admin təyin edir və ya adminlikdən çıxarır.
+
+| Rol | İcazələr |
 |---|---|
-| leyla@unec.edu.az | Aktiv, cavablandırılmamış sorğu → popup, kart, badge |
-| reshad@unec.edu.az | Cavab verib; bağlanmış sorğunun nəticələri açıqdır |
-| nigar@unec.edu.az | Ona ünvanlanan sorğu yoxdur → "Sorğular" modulu tam gizlidir |
-| superadmin@unec.edu.az | "Sorğuların idarə edilməsi" həmişə görünür |
+| Superadmin | Hamısı + rolların idarə edilməsi |
+| Administrator | Sorğular, xəbərlər, qeydiyyat linki |
+| Şura üzvü | Ona ünvanlanan sorğular, xəbərlər, profil |
 
 ## Landing və Xəbərlər
 

@@ -1,7 +1,8 @@
-import { and, asc, count, desc, eq, lte } from "drizzle-orm";
-import type { AnswerValue, NewsItem, Survey, SurveyResponse, User } from "../types";
+import { randomBytes } from "node:crypto";
+import { and, asc, count, desc, eq, gt, isNull, lte } from "drizzle-orm";
+import type { AnswerValue, Invite, NewsItem, Survey, SurveyResponse, User } from "../types";
 import { db } from "./client";
-import { news, surveyResponses, surveys, users } from "./schema";
+import { invites, news, surveyResponses, surveys, users } from "./schema";
 
 /**
  * Verilənlər bazası ilə bütün iş bu qatdan keçir.
@@ -178,4 +179,90 @@ export async function updateNews(item: NewsItem) {
 
 export async function deleteNews(id: string) {
   await db.delete(news).where(eq(news.id, id));
+}
+
+// ---------- User yazma əməliyyatları ----------
+
+/** E-poçt artıq mövcuddursa false qaytarır (unique index). */
+export async function insertUser(user: User) {
+  const inserted = await db
+    .insert(users)
+    .values({ ...user, email: user.email.toLowerCase(), createdAt: new Date(user.createdAt) })
+    .onConflictDoNothing({ target: users.email })
+    .returning({ id: users.id });
+  return inserted.length > 0;
+}
+
+export async function updateUserProfile(id: string, p: Pick<User, "name" | "faculty" | "position" | "academicTitle">) {
+  await db.update(users).set(p).where(eq(users.id, id));
+}
+
+export async function updateUserRole(id: string, role: User["role"]) {
+  await db.update(users).set({ role }).where(eq(users.id, id));
+}
+
+export async function updateUserPassword(id: string, passwordHash: string) {
+  await db.update(users).set({ passwordHash }).where(eq(users.id, id));
+}
+
+// ---------- Invites ----------
+
+type InviteRow = typeof invites.$inferSelect;
+const toInvite = (r: InviteRow): Invite => ({
+  ...r,
+  createdAt: r.createdAt.toISOString(),
+  expiresAt: r.expiresAt.toISOString(),
+  revokedAt: iso(r.revokedAt),
+});
+
+const INVITE_TTL_MS = 24 * 60 * 60 * 1000;
+
+/** Yeni dəvət linki yaradır; əvvəlki aktiv linklər deaktiv edilir (eyni anda yalnız biri aktivdir). */
+export async function createInvite(createdBy: string) {
+  const now = new Date();
+  await db.update(invites).set({ revokedAt: now }).where(and(isNull(invites.revokedAt), gt(invites.expiresAt, now)));
+  const invite = {
+    id: newId("inv"),
+    token: randomBytes(24).toString("base64url"),
+    createdBy,
+    createdAt: now,
+    expiresAt: new Date(now.getTime() + INVITE_TTL_MS),
+    revokedAt: null,
+  };
+  await db.insert(invites).values(invite);
+  return toInvite(invite);
+}
+
+export async function getActiveInvite() {
+  const [row] = await db
+    .select()
+    .from(invites)
+    .where(and(isNull(invites.revokedAt), gt(invites.expiresAt, new Date())))
+    .orderBy(desc(invites.createdAt))
+    .limit(1);
+  return row ? toInvite(row) : null;
+}
+
+export async function findValidInvite(token: string) {
+  if (!token || token.length > 100) return null;
+  const [row] = await db
+    .select()
+    .from(invites)
+    .where(and(eq(invites.token, token), isNull(invites.revokedAt), gt(invites.expiresAt, new Date())))
+    .limit(1);
+  return row ? toInvite(row) : null;
+}
+
+export async function revokeInvite(id: string) {
+  await db.update(invites).set({ revokedAt: new Date() }).where(and(eq(invites.id, id), isNull(invites.revokedAt)));
+}
+
+/** Son linklər + hər biri ilə qeydiyyatdan keçənlərin sayı */
+export async function listRecentInvites(limit = 10) {
+  const [rows, counts] = await Promise.all([
+    db.select().from(invites).orderBy(desc(invites.createdAt)).limit(limit),
+    db.select({ inviteId: users.inviteId, n: count() }).from(users).groupBy(users.inviteId),
+  ]);
+  const byInvite = new Map(counts.map((c) => [c.inviteId, Number(c.n)]));
+  return rows.map((r) => ({ ...toInvite(r), registrations: byInvite.get(r.id) ?? 0 }));
 }

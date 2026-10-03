@@ -2,13 +2,14 @@ import { cache } from "react";
 import type { User } from "../types";
 import { newsAdminModule } from "./providers/news";
 import { surveyAdminModule, surveyModule } from "./providers/survey";
+import { inviteAdminModule, usersAdminModule } from "./providers/users";
 import type { DashboardCard, ModuleProvider, ModuleSummary, NavEntry } from "./types";
 
 /**
  * Qeydiyyatdan keçmiş modullar. Gələcək modullar (iclas, tapşırıq, səsvermə, qərar)
  * eyni interfeysi implement edib bura əlavə olunacaq.
  */
-const PROVIDERS: ModuleProvider[] = [surveyModule, surveyAdminModule, newsAdminModule];
+const PROVIDERS: ModuleProvider[] = [surveyModule, surveyAdminModule, newsAdminModule, inviteAdminModule, usersAdminModule];
 
 export interface ResolvedModules {
   modules: ModuleSummary[];

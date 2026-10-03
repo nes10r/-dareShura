@@ -12,6 +12,8 @@ export const users = pgTable("users", {
   faculty: text("faculty").notNull(),
   position: text("position").notNull(),
   academicTitle: text("academic_title"),
+  /** Hansı dəvət linki ilə qeydiyyatdan keçib (audit üçün) */
+  inviteId: text("invite_id"),
   createdAt: ts("created_at").notNull().defaultNow(),
 });
 
@@ -68,4 +70,18 @@ export const news = pgTable(
     updatedAt: ts("updated_at").notNull().defaultNow(),
   },
   (t) => [index("news_published_idx").on(t.isPublished, t.publishedAt)],
+);
+
+/** Qeydiyyat dəvət linkləri: admin yaradır, 24 saat etibarlıdır, eyni anda yalnız biri aktivdir. */
+export const invites = pgTable(
+  "invites",
+  {
+    id: text("id").primaryKey(),
+    token: text("token").notNull().unique(),
+    createdBy: text("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    expiresAt: ts("expires_at").notNull(),
+    revokedAt: ts("revoked_at"),
+  },
+  (t) => [index("invites_expires_idx").on(t.expiresAt)],
 );

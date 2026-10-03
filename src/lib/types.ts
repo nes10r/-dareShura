@@ -9,7 +9,17 @@ export interface User {
   faculty: string;
   position: string;
   academicTitle: string | null;
+  inviteId?: string | null;
   createdAt: string;
+}
+
+export interface Invite {
+  id: string;
+  token: string;
+  createdBy: string;
+  createdAt: string;
+  expiresAt: string;
+  revokedAt: string | null;
 }
 
 /** Client-ə ötürülə bilən təhlükəsiz istifadəçi görünüşü (parol hash-i olmadan). */

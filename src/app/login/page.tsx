@@ -32,15 +32,6 @@ export default async function LoginPage() {
           <p className="mt-1 text-muted">Hesabınıza daxil olun</p>
           <LoginForm />
 
-          <details className="mt-8 rounded-xl bg-surface p-4 text-sm">
-            <summary className="cursor-pointer font-medium text-ink">Demo hesablar (şifrə: Demo1234)</summary>
-            <ul className="mt-3 space-y-2 text-muted">
-              <li><b className="text-ink">leyla@unec.edu.az</b> — aktiv sorğu gözləyir</li>
-              <li><b className="text-ink">reshad@unec.edu.az</b> — cavab verib, nəticələr açıqdır</li>
-              <li><b className="text-ink">nigar@unec.edu.az</b> — ona ünvanlanan sorğu yoxdur (modul gizli)</li>
-              <li><b className="text-ink">superadmin@unec.edu.az</b> — sorğuların idarə edilməsi</li>
-            </ul>
-          </details>
         </div>
       </main>
     </div>

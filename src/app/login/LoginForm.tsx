@@ -56,6 +56,10 @@ export function LoginForm() {
       >
         {pending ? "Daxil olunur…" : "Daxil ol"}
       </button>
+
+      <p className="text-center text-sm text-muted">
+        Hesabınız yoxdur? Qeydiyyat üçün platforma administratorundan dəvət linki istəyin.
+      </p>
     </form>
   );
 }

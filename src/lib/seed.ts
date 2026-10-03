@@ -1,42 +1,29 @@
 import { hashPassword } from "./password";
-import type { AnswerValue, Audience, NewsItem, SeedData, Question, Survey, SurveyResponse, User } from "./types";
+import type { Audience, NewsItem, Question, SeedData, Survey, User } from "./types";
 
 const DAY = 24 * 60 * 60 * 1000;
 
 const ALL: Audience = { all: true, roles: [], faculties: [], userIds: [] };
-const PILOT: Audience = {
-  all: false,
-  roles: ["SUPER_ADMIN", "ADMIN"],
-  faculties: ["Rəqəmsal iqtisadiyyat", "Biznes və menecment", "İqtisadiyyat və idarəetmə", "Beynəlxalq iqtisadiyyat"],
-  userIds: [],
-};
-
 /**
- * Demo məlumatlar. Hər istifadəçi survey modulunun fərqli vəziyyətini göstərir:
- *  - Leyla   → aktiv, cavablandırılmamış sorğu var (popup + badge)
- *  - Rəşad   → aktiv sorğuya cavab verib + bağlanmış sorğunun nəticələri açıqdır
- *  - Nigar   → ona ünvanlanan heç bir sorğu yoxdur → modul tam gizlidir
- *  - Admin   → "Sorğuların idarə edilməsi" həmişə görünür
+ * İlkin məlumatlar: yalnız superadmin, əsas sorğu, şablon və xəbərlər.
+ * Digər istifadəçilər /register vasitəsilə @unec.edu.az e-poçtu ilə qeydiyyatdan keçir.
  */
-export function createSeed(): SeedData {
+export function createSeed(superadminPassword: string): SeedData {
   const now = Date.now();
   const iso = (offsetDays: number) => new Date(now + offsetDays * DAY).toISOString();
-  const password = hashPassword("Demo1234");
-
-  const user = (id: string, name: string, email: string, role: User["role"], faculty: string, position: string, academicTitle: string | null): User => ({
-    id, name, email, passwordHash: password, role, faculty, position, academicTitle, createdAt: iso(-90),
-  });
 
   const users: User[] = [
-    user("u_super", "Elçin Rzayev", "superadmin@unec.edu.az", "SUPER_ADMIN", "İqtisadiyyat və idarəetmə", "Platforma administratoru", null),
-    user("u_admin", "Səbinə Əliyeva", "katib@unec.edu.az", "ADMIN", "İqtisadiyyat və idarəetmə", "Alimlər Şurasının elmi katibi", "dosent"),
-    user("u_leyla", "Leyla Məmmədova", "leyla@unec.edu.az", "MEMBER", "Rəqəmsal iqtisadiyyat", "Kafedra müdiri", "professor"),
-    user("u_reshad", "Rəşad Həsənov", "reshad@unec.edu.az", "MEMBER", "Biznes və menecment", "Dekan müavini", "dosent"),
-    user("u_nigar", "Nigar Quliyeva", "nigar@unec.edu.az", "MEMBER", "Maliyyə və mühasibat", "Baş müəllim", "dosent"),
-    user("u_m1", "Tural Abbasov", "tural@unec.edu.az", "MEMBER", "Beynəlxalq iqtisadiyyat", "Dosent", "dosent"),
-    user("u_m2", "Aynur Kərimova", "aynur@unec.edu.az", "MEMBER", "Rəqəmsal iqtisadiyyat", "Professor", "professor"),
-    user("u_m3", "Fərid Novruzov", "farid@unec.edu.az", "MEMBER", "Maliyyə və mühasibat", "Dosent", "dosent"),
-    user("u_m4", "Günel Babayeva", "gunel@unec.edu.az", "MEMBER", "Biznes və menecment", "Baş müəllim", null),
+    {
+      id: "u_super",
+      name: "Superadmin",
+      email: "superadmin@unec.edu.az",
+      passwordHash: hashPassword(superadminPassword),
+      role: "SUPER_ADMIN",
+      faculty: "İqtisadiyyat və idarəetmə",
+      position: "Platforma administratoru",
+      academicTitle: null,
+      createdAt: iso(0),
+    },
   ];
 
   const q = (id: string, type: Question["type"], title: string, extra: Partial<Question> = {}): Question => ({
@@ -57,8 +44,7 @@ export function createSeed(): SeedData {
     endsAt: mainDeadline,
     publishedAt: iso(-1),
     closedAt: null,
-    // Pilot mərhələ: Maliyyə fakültəsi hələ daxil deyil — Nigar üçün modul tam gizli qalır
-    audience: PILOT,
+    audience: ALL,
     resultsVisibility: "NONE",
     resultsVisibleUntil: null,
     isTemplate: false,
@@ -102,74 +88,18 @@ export function createSeed(): SeedData {
     ],
   };
 
-  const seminarSurvey: Survey = {
-    id: "s_seminar",
-    title: "Elmi seminarların təşkili formatı",
-    description: "Elmi seminarların hansı formatda keçirilməsinə dair rəyiniz.",
-    status: "PUBLISHED",
-    startsAt: iso(-20),
-    endsAt: iso(-4),
-    publishedAt: iso(-20),
-    closedAt: null,
-    audience: ALL,
-    resultsVisibility: "RESPONDENTS",
-    resultsVisibleUntil: iso(30),
-    isTemplate: false,
-    createdBy: "u_admin",
-    createdAt: iso(-21),
-    updatedAt: iso(-20),
-    questions: [
-      q("q1", "single", "Seminarlar hansı formatda keçirilsin?", { options: ["Əyani", "Onlayn", "Hibrid"] }),
-      q("q2", "single", "Seminarların tezliyi necə olsun?", { options: ["Həftədə bir", "İki həftədə bir", "Ayda bir"] }),
-      q("q3", "scale", "Mövcud seminarların keyfiyyətini qiymətləndirin", {
-        scaleMax: 5, scaleMinLabel: "Zəif", scaleMaxLabel: "Əla",
-      }),
-    ],
-  };
-
-  const scheduledSurvey: Survey = {
-    id: "s_journals",
-    title: "Elmi jurnalların indeksləşmə strategiyası",
-    description: "Universitet jurnallarının beynəlxalq bazalara daxil edilməsi üzrə prioritetlər.",
-    status: "PUBLISHED",
-    startsAt: iso(5),
-    endsAt: iso(20),
-    publishedAt: iso(0),
-    closedAt: null,
-    audience: { all: false, roles: [], faculties: ["Rəqəmsal iqtisadiyyat", "Maliyyə və mühasibat"], userIds: [] },
-    resultsVisibility: "NONE",
-    resultsVisibleUntil: null,
-    isTemplate: false,
-    createdBy: "u_super",
-    createdAt: iso(-1),
-    updatedAt: iso(0),
-    questions: [
-      q("q1", "multiple", "Hansı bazalar prioritet olmalıdır?", { options: ["Scopus", "Web of Science", "ERIH PLUS", "DOAJ"] }),
-    ],
-  };
-
-  const draftSurvey: Survey = {
-    id: "s_draft",
-    title: "Doktorantura proqramlarının qiymətləndirilməsi",
-    description: "",
+  const template: Survey = {
+    id: "s_tpl_event",
     status: "DRAFT",
     startsAt: null,
     endsAt: null,
     publishedAt: null,
     closedAt: null,
-    audience: { all: false, roles: ["MEMBER"], faculties: [], userIds: [] },
     resultsVisibility: "NONE",
     resultsVisibleUntil: null,
-    isTemplate: false,
     createdBy: "u_super",
-    createdAt: iso(-2),
-    updatedAt: iso(-2),
-    questions: [q("q1", "scale", "Doktorantura proqramlarının ümumi keyfiyyəti", { scaleMax: 5 })],
-  };
-
-  const template: Survey = {
-    ...draftSurvey,
-    id: "s_tpl_event",
+    createdAt: iso(0),
+    updatedAt: iso(0),
     title: "Tədbir sonrası rəy sorğusu",
     description: "Hər tədbirdən sonra istifadə üçün standart şablon.",
     audience: ALL,
@@ -181,40 +111,12 @@ export function createSeed(): SeedData {
     ],
   };
 
-  // Deterministik demo cavablar
-  const responses: SurveyResponse[] = [];
-  const answer = (surveyId: string, userId: string, answers: Record<string, AnswerValue>, daysAgo: number) =>
-    responses.push({ id: `r_${surveyId}_${userId}`, surveyId, userId, answers, submittedAt: iso(-daysAgo) });
-
-  const seminarAnswers: [string, string, string, number][] = [
-    ["u_reshad", "Hibrid", "İki həftədə bir", 4],
-    ["u_admin", "Əyani", "Ayda bir", 3],
-    ["u_m1", "Hibrid", "İki həftədə bir", 4],
-    ["u_m2", "Onlayn", "Həftədə bir", 5],
-    ["u_m3", "Hibrid", "Ayda bir", 3],
-    ["u_m4", "Hibrid", "İki həftədə bir", 4],
-  ];
-  seminarAnswers.forEach(([uid, a1, a2, a3], i) => answer("s_seminar", uid, { q1: a1, q2: a2, q3: a3 }, 10 + i));
-
-  const platformAnswers: [string, string, string[], number][] = [
-    ["u_reshad", "Mobil telefon", ["Onlayn səsvermə", "Qərarların arxivi", "Bildirişlər"], 2],
-    ["u_m2", "Mobil telefon", ["İclas gündəliyi və materialları", "Onlayn səsvermə"], 1],
-    ["u_m1", "Noutbuk / kompüter", ["Sənəd dövriyyəsi", "Tapşırıqların izlənməsi"], 3],
-  ];
-  platformAnswers.forEach(([uid, device, features, satisfaction]) =>
-    answer("s_platform", uid, {
-      q1: device, q2: features, q3: satisfaction, q4: "İclasdan 3 gün əvvəl", q5: 5,
-      q6: ["Platforma daxilində", "E-poçt"], q7: "Bəli, amma sonrakı mərhələdə", q8: 4,
-      q9: "Video təlimatlar", q10: ["Yaxınlaşan iclaslar", "Açıq səsvermələr"], q11: "", q12: "",
-    }, 0),
-  );
-
   const article = (id: string, slug: string, title: string, category: NewsItem["category"], coverImage: string, daysAgo: number, summary: string, body: string): NewsItem => ({
     id, slug, title, category, coverImage, summary, body,
     isPublished: true, publishedAt: iso(-daysAgo), createdBy: "u_super", createdAt: iso(-daysAgo), updatedAt: iso(-daysAgo),
   });
 
-  // Demo xəbərlər — admin panelindən redaktə və ya silinə bilər
+  // Başlanğıc xəbərlər — admin panelindən redaktə və ya silinə bilər
   const news: NewsItem[] = [
     article("n_launch", "alimler-surasinin-reqemsal-platformasi-istifadeye-verildi",
       "Alimlər Şurasının rəqəmsal platforması istifadəyə verildi", "Xəbər", "/images/campus-aerial.jpg", 1,
@@ -240,5 +142,5 @@ export function createSeed(): SeedData {
       ].join("\n\n")),
   ];
 
-  return { users, surveys: [platformSurvey, seminarSurvey, scheduledSurvey, draftSurvey, template], responses, news };
+  return { users, surveys: [platformSurvey, template], responses: [], news };
 }
