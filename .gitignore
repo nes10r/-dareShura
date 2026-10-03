@@ -1,0 +1,7 @@
+node_modules
+.next
+next-env.d.ts
+*.tsbuildinfo
+# Lokal PGlite bazası (DATABASE_URL olmadıqda)
+data/pglite
+.env*.local
