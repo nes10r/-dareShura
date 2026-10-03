@@ -5,7 +5,8 @@ import { useMemo, useState, useTransition } from "react";
 import { saveSurvey, type SurveyInput } from "@/app/(app)/admin/surveys/actions";
 import { Icon } from "@/components/Icon";
 import { estimateMinutes } from "@/lib/surveys/service";
-import { FACULTIES, ROLE_LABELS, type Question, type QuestionType, type Role } from "@/lib/types";
+import { facultyList } from "@/lib/faculties";
+import { ROLE_LABELS, type Question, type QuestionType, type Role } from "@/lib/types";
 
 interface Props {
   id: string | null;
@@ -49,6 +50,8 @@ export function SurveyEditor({ id, isTemplate, initial, people }: Props) {
   const [s, setS] = useState<SurveyInput>(initial);
   const [errors, setErrors] = useState<string[]>([]);
   const [pending, startTransition] = useTransition();
+
+  const faculties = useMemo(() => facultyList(people.map((p) => p.faculty)), [people]);
 
   const audienceSize = useMemo(() => {
     const a = s.audience;
@@ -221,7 +224,8 @@ export function SurveyEditor({ id, isTemplate, initial, people }: Props) {
                 <fieldset>
                   <legend className="text-sm font-medium">Fakültələr</legend>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {FACULTIES.map((f) => (
+                    {faculties.length === 0 && <p className="text-sm text-muted">Hələ fakültə məlumatı olan istifadəçi yoxdur.</p>}
+                    {faculties.map((f) => (
                       <Chip key={f} active={s.audience.faculties.includes(f)} onClick={() => patch({ audience: { ...s.audience, faculties: toggle(s.audience.faculties, f) } })}>{f}</Chip>
                     ))}
                   </div>

@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { requirePermission } from "@/lib/auth";
 import { deleteSurvey, getSurvey, insertSurvey, listUsers, newId, updateSurvey } from "@/lib/db/repo";
 import { resolveAudience } from "@/lib/surveys/service";
-import { FACULTIES, type Audience, type Question, type ResultsVisibility, type Role, type Survey } from "@/lib/types";
+import { cleanFaculty } from "@/lib/faculties";
+import { type Audience, type Question, type ResultsVisibility, type Role, type Survey } from "@/lib/types";
 
 export interface SurveyInput {
   title: string;
@@ -32,7 +33,7 @@ function sanitize(input: SurveyInput): SurveyInput {
     audience: {
       all: !!input.audience?.all,
       roles: (input.audience?.roles ?? []).filter((r) => ROLES.includes(r)),
-      faculties: (input.audience?.faculties ?? []).filter((f) => (FACULTIES as readonly string[]).includes(f)),
+      faculties: [...new Set((input.audience?.faculties ?? []).map((f) => cleanFaculty(String(f))).filter(Boolean))].slice(0, 100),
       userIds: (input.audience?.userIds ?? []).filter((u) => typeof u === "string"),
     },
     resultsVisibility: input.resultsVisibility === "RESPONDENTS" ? "RESPONDENTS" : "NONE",

@@ -99,13 +99,6 @@ export const ROLE_LABELS: Record<Role, string> = {
   MEMBER: "Şura üzvü",
 };
 
-export const FACULTIES = [
-  "Rəqəmsal iqtisadiyyat",
-  "Biznes və menecment",
-  "Maliyyə və mühasibat",
-  "İqtisadiyyat və idarəetmə",
-  "Beynəlxalq iqtisadiyyat",
-] as const;
 
 export const NEWS_CATEGORIES = ["Xəbər", "Elan", "İclas", "Tədbir"] as const;
 export type NewsCategory = (typeof NEWS_CATEGORIES)[number];

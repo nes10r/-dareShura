@@ -19,7 +19,7 @@ export function createSeed(superadminPassword: string): SeedData {
       email: "superadmin@unec.edu.az",
       passwordHash: hashPassword(superadminPassword),
       role: "SUPER_ADMIN",
-      faculty: "İqtisadiyyat və idarəetmə",
+      faculty: "",
       position: "Platforma administratoru",
       academicTitle: null,
       createdAt: iso(0),

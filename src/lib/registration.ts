@@ -1,6 +1,6 @@
-import { findValidInvite, insertUser, newId } from "./db/repo";
+import { findValidInvite, insertUser, listFaculties, newId } from "./db/repo";
+import { canonicalFaculty, facultyProblem } from "./faculties";
 import { hashPassword } from "./password";
-import { FACULTIES } from "./types";
 import { ACADEMIC_TITLES, normalizeEmail, passwordProblem, UNEC_EMAIL_RE } from "./validation";
 
 export type RegisterField = "name" | "email" | "faculty" | "position" | "password" | "confirm" | "form";
@@ -31,14 +31,15 @@ export async function registerUser(raw: RegisterInput): Promise<RegisterResult> 
   const v = {
     name: raw.name.trim(),
     email: normalizeEmail(raw.email),
-    faculty: raw.faculty.trim(),
+    faculty: canonicalFaculty(raw.faculty, await listFaculties()),
     position: raw.position.trim(),
     academicTitle: raw.academicTitle.trim(),
   };
   const errors: Partial<Record<RegisterField, string>> = {};
   if (v.name.length < 3 || v.name.length > 100) errors.name = "Ad və soyadınızı daxil edin.";
   if (!UNEC_EMAIL_RE.test(v.email)) errors.email = "Yalnız @unec.edu.az ilə bitən korporativ e-poçt qəbul olunur.";
-  if (!(FACULTIES as readonly string[]).includes(v.faculty)) errors.faculty = "Fakültəni seçin.";
+  const fp = facultyProblem(v.faculty);
+  if (fp) errors.faculty = fp;
   if (!v.position || v.position.length > 120) errors.position = "Vəzifənizi daxil edin.";
   const pw = passwordProblem(raw.password);
   if (pw) errors.password = pw;

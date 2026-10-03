@@ -94,7 +94,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                   </p>
                   <p className="truncate text-sm text-muted">{u.email}</p>
                   <p className="truncate text-xs text-muted">
-                    {u.position} · {u.faculty} · Qeydiyyat: {formatDate(u.createdAt)}
+                    {[u.position, u.faculty].filter(Boolean).join(" · ")} · Qeydiyyat: {formatDate(u.createdAt)}
                   </p>
                 </div>
               </div>

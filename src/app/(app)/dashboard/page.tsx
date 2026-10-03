@@ -83,7 +83,7 @@ export default async function DashboardPage() {
             </div>
             <div>
               <dt className="text-muted">Fakültə</dt>
-              <dd className="font-medium">{user.faculty}</dd>
+              <dd className="font-medium">{user.faculty || "—"}</dd>
             </div>
             <div>
               <dt className="text-muted">Status</dt>

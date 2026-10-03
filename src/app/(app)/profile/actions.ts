@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser, verifyPassword } from "@/lib/auth";
-import { updateUserPassword, updateUserProfile } from "@/lib/db/repo";
+import { listFaculties, updateUserPassword, updateUserProfile } from "@/lib/db/repo";
+import { canonicalFaculty, facultyProblem } from "@/lib/faculties";
 import { hashPassword } from "@/lib/password";
-import { FACULTIES } from "@/lib/types";
 import { ACADEMIC_TITLES, passwordProblem } from "@/lib/validation";
 
 export type FormState = { ok?: boolean; error?: string };
@@ -13,12 +13,13 @@ export async function saveProfile(_prev: FormState, formData: FormData): Promise
   const user = await requireUser();
   const get = (k: string) => String(formData.get(k) ?? "").trim();
   const name = get("name");
-  const faculty = get("faculty");
+  const faculty = canonicalFaculty(get("faculty"), await listFaculties());
   const position = get("position");
   const academicTitle = get("academicTitle");
 
   if (name.length < 3 || name.length > 100) return { error: "Ad və soyadı daxil edin." };
-  if (!(FACULTIES as readonly string[]).includes(faculty)) return { error: "Fakültəni seçin." };
+  const fp = facultyProblem(faculty);
+  if (fp) return { error: fp };
   if (!position || position.length > 120) return { error: "Vəzifəni daxil edin." };
 
   await updateUserProfile(user.id, {

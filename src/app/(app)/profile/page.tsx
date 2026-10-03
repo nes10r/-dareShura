@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { logout } from "@/app/login/actions";
 import { Icon } from "@/components/Icon";
 import { requireUser } from "@/lib/auth";
+import { listFaculties } from "@/lib/db/repo";
 import { initials } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/types";
 import { PasswordForm, ProfileForm } from "./ProfileForms";
@@ -10,6 +11,7 @@ export const metadata: Metadata = { title: "Profil" };
 
 export default async function ProfilePage() {
   const user = await requireUser();
+  const faculties = await listFaculties();
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-6 sm:px-6 lg:pt-10">
@@ -26,7 +28,7 @@ export default async function ProfilePage() {
 
       <section className="mt-6 rounded-2xl bg-white p-4 ring-1 ring-line sm:p-5">
         <h2 className="mb-4 font-semibold">Şəxsi məlumatlar</h2>
-        <ProfileForm user={{ name: user.name, faculty: user.faculty, position: user.position, academicTitle: user.academicTitle }} />
+        <ProfileForm user={{ name: user.name, faculty: user.faculty, position: user.position, academicTitle: user.academicTitle }} faculties={faculties} />
       </section>
 
       <section className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-line sm:p-5">

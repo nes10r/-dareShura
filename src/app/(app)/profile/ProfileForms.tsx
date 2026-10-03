@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { FACULTIES } from "@/lib/types";
+import { FacultyInput } from "@/components/ui/FacultyInput";
 import { ACADEMIC_TITLES } from "@/lib/validation";
 import { changePassword, saveProfile, type FormState } from "./actions";
 
@@ -14,7 +14,13 @@ function Status({ state, okText }: { state: FormState; okText: string }) {
   return null;
 }
 
-export function ProfileForm({ user }: { user: { name: string; faculty: string; position: string; academicTitle: string | null } }) {
+export function ProfileForm({
+  user,
+  faculties,
+}: {
+  user: { name: string; faculty: string; position: string; academicTitle: string | null };
+  faculties: string[];
+}) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveProfile, {});
   return (
     <form action={action} className="space-y-4">
@@ -24,10 +30,7 @@ export function ProfileForm({ user }: { user: { name: string; faculty: string; p
       </label>
       <label className="block">
         <span className="text-sm font-medium">Fakültə</span>
-        <select name="faculty" defaultValue={user.faculty} className={inputCls}>
-          {!(FACULTIES as readonly string[]).includes(user.faculty) && <option value={user.faculty}>{user.faculty}</option>}
-          {FACULTIES.map((f) => <option key={f} value={f}>{f}</option>)}
-        </select>
+        <FacultyInput faculties={faculties} defaultValue={user.faculty} className={inputCls} />
       </label>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">

@@ -19,9 +19,9 @@ export default async function SurveyAnalyticsPage({ params }: { params: Promise<
   const rate = audience.length ? Math.round((responses.length / audience.length) * 100) : 0;
 
   // Fakültələr üzrə iştirak
-  const byFaculty = [...new Set(audience.map((u) => u.faculty))]
+  const byFaculty = [...new Set(audience.map((u) => u.faculty || "Göstərilməyib"))]
     .map((faculty) => {
-      const members = audience.filter((u) => u.faculty === faculty);
+      const members = audience.filter((u) => (u.faculty || "Göstərilməyib") === faculty);
       const done = members.filter((u) => respondedIds.has(u.id)).length;
       return { faculty, done, total: members.length };
     })

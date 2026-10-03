@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { and, asc, count, desc, eq, gt, isNull, lte } from "drizzle-orm";
+import { facultyList } from "../faculties";
 import type { AnswerValue, Invite, NewsItem, Survey, SurveyResponse, User } from "../types";
 import { db } from "./client";
 import { invites, news, surveyResponses, surveys, users } from "./schema";
@@ -265,4 +266,10 @@ export async function listRecentInvites(limit = 10) {
   ]);
   const byInvite = new Map(counts.map((c) => [c.inviteId, Number(c.n)]));
   return rows.map((r) => ({ ...toInvite(r), registrations: byInvite.get(r.id) ?? 0 }));
+}
+
+/** Qeydiyyatdan keçmiş istifadəçilərin fakültələri (təkrarsız) */
+export async function listFaculties() {
+  const rows = await db.selectDistinct({ faculty: users.faculty }).from(users);
+  return facultyList(rows.map((r) => r.faculty));
 }

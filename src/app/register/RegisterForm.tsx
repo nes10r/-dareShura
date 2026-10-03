@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { FACULTIES } from "@/lib/types";
+import { FacultyInput } from "@/components/ui/FacultyInput";
 import { ACADEMIC_TITLES } from "@/lib/validation";
 import { register, type RegisterState } from "./actions";
 
@@ -23,7 +23,7 @@ function Field({ label, error, hint, children }: { label: string; error?: string
   );
 }
 
-export function RegisterForm({ token }: { token: string }) {
+export function RegisterForm({ token, faculties }: { token: string; faculties: string[] }) {
   const [state, action, pending] = useActionState<RegisterState, FormData>(register, {});
   const [showPassword, setShowPassword] = useState(false);
   const e = state.errors ?? {};
@@ -53,11 +53,8 @@ export function RegisterForm({ token }: { token: string }) {
         />
       </Field>
 
-      <Field label="Fakültə" error={e.faculty}>
-        <select name="faculty" defaultValue={v.faculty ?? ""} className={`${inputCls} ${border(e.faculty)}`}>
-          <option value="" disabled>Seçin</option>
-          {FACULTIES.map((f) => <option key={f} value={f}>{f}</option>)}
-        </select>
+      <Field label="Fakültə" error={e.faculty} hint={faculties.length ? "Fakültəniz siyahıdadırsa, seçin" : undefined}>
+        <FacultyInput faculties={faculties} defaultValue={v.faculty} className={`${inputCls} ${border(e.faculty)}`} />
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
