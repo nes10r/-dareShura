@@ -1,5 +1,6 @@
 import { findValidInvite, insertUser, listFaculties, newId } from "./db/repo";
 import { canonicalFaculty, facultyProblem } from "./faculties";
+import { normalizePersonName } from "./names";
 import { hashPassword } from "./password";
 import { ACADEMIC_TITLES, normalizeEmail, passwordProblem, UNEC_EMAIL_RE } from "./validation";
 
@@ -29,7 +30,7 @@ export async function registerUser(raw: RegisterInput): Promise<RegisterResult> 
   }
 
   const v = {
-    name: raw.name.trim(),
+    name: normalizePersonName(raw.name),
     email: normalizeEmail(raw.email),
     faculty: canonicalFaculty(raw.faculty, await listFaculties()),
     position: raw.position.trim(),

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireUser, verifyPassword } from "@/lib/auth";
 import { listFaculties, removeAvatar, setAvatar, updateUserPassword, updateUserProfile } from "@/lib/db/repo";
 import { canonicalFaculty, facultyProblem } from "@/lib/faculties";
+import { normalizePersonName } from "@/lib/names";
 import { hashPassword } from "@/lib/password";
 import { ACADEMIC_TITLES, passwordProblem } from "@/lib/validation";
 
@@ -12,7 +13,7 @@ export type FormState = { ok?: boolean; error?: string };
 export async function saveProfile(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
   const get = (k: string) => String(formData.get(k) ?? "").trim();
-  const name = get("name");
+  const name = normalizePersonName(get("name"));
   const faculty = canonicalFaculty(get("faculty"), await listFaculties());
   const position = get("position");
   const academicTitle = get("academicTitle");
