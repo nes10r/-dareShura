@@ -15,11 +15,11 @@ export default async function AdminSurveyPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ published?: string; saved?: string }>;
+  searchParams: Promise<{ published?: string; saved?: string; updated?: string }>;
 }) {
   await requirePermission("survey.manage");
   const { id } = await params;
-  const { published, saved } = await searchParams;
+  const { published, saved, updated } = await searchParams;
   const survey = await getSurvey(id);
   if (!survey) notFound();
 
@@ -104,6 +104,10 @@ export default async function AdminSurveyPage({
         </div>
       )}
 
+      {updated && (
+        <p className="animate-pop mt-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">Dəyişikliklər yadda saxlanıldı.</p>
+      )}
+
       <div className="mt-4 flex items-start justify-between gap-3">
         <h1 className="text-xl font-bold leading-snug sm:text-2xl">{survey.title}</h1>
         <StatusChip status={status} />
@@ -137,6 +141,9 @@ export default async function AdminSurveyPage({
       <div className="mt-5 grid gap-2 sm:flex sm:flex-wrap">
         <Link href={`/admin/surveys/${survey.id}/analytics`} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-brand-700 px-5 font-semibold text-white hover:bg-brand-800">
           <Icon name="chart" className="size-5" /> Analitika
+        </Link>
+        <Link href={`/admin/surveys/${survey.id}/edit`} className={secondaryBtn}>
+          <Icon name="settings" className="size-4" /> Redaktə et
         </Link>
         <form action={duplicateSurvey.bind(null, survey.id, false)} className="grid">
           <button type="submit" className={secondaryBtn}><Icon name="file" className="size-4" /> Kopyasını yarat</button>

@@ -59,7 +59,7 @@ function sanitize(input: SurveyInput): SurveyInput {
 }
 
 /** Dərc üçün tam yoxlama. Draft üçün yalnız başlıq tələb olunur. */
-function validateForPublish(s: SurveyInput) {
+function validateForPublish(s: SurveyInput, { requireFutureEnd = true } = {}) {
   const errors: string[] = [];
   if (!s.title) errors.push("Sorğunun adını daxil edin.");
   if (!s.questions.length) errors.push("Ən azı bir sual əlavə edin.");
@@ -70,7 +70,7 @@ function validateForPublish(s: SurveyInput) {
     }
   });
   if (!s.endsAt) errors.push("Son tarixi seçin.");
-  else if (new Date(s.endsAt) <= new Date()) errors.push("Son tarix gələcəkdə olmalıdır.");
+  else if (requireFutureEnd && new Date(s.endsAt) <= new Date()) errors.push("Son tarix gələcəkdə olmalıdır.");
   if (s.startsAt && s.endsAt && new Date(s.startsAt) >= new Date(s.endsAt)) errors.push("Başlama tarixi son tarixdən əvvəl olmalıdır.");
   const a = s.audience;
   if (!a.all && !a.roles.length && !a.faculties.length && !a.userIds.length) errors.push("Auditoriyanı seçin.");
@@ -83,7 +83,7 @@ export async function saveSurvey(id: string | null, raw: SurveyInput, intent: "d
 
   const existing = id ? await getSurvey(id) : null;
   if (id && !existing) return { ok: false, errors: ["Sorğu tapılmadı."] };
-  if (existing && existing.status !== "DRAFT") return { ok: false, errors: ["Dərc olunmuş sorğu redaktə edilə bilməz."] };
+  if (existing && existing.status !== "DRAFT") return updatePublishedSurvey(existing, input);
 
   const errors = intent === "publish" ? validateForPublish(input) : input.title ? [] : ["Sorğunun adını daxil edin."];
   if (errors.length) return { ok: false, errors };
@@ -111,6 +111,21 @@ export async function saveSurvey(id: string | null, raw: SurveyInput, intent: "d
 
   revalidatePath("/", "layout");
   return { ok: true, id: survey.id, audienceSize };
+}
+
+/**
+ * Dərc olunmuş (aktiv, planlaşdırılmış və ya bağlanmış) sorğunun redaktəsi.
+ * Status, dərc tarixi saxlanılır; sual id-ləri dəyişmədiyi üçün mövcud cavablar öz suallarına bağlı qalır.
+ */
+async function updatePublishedSurvey(existing: Survey, input: SurveyInput): Promise<SaveResult> {
+  // Bağlanmış sorğuda son tarix keçmiş ola bilər; aktiv sorğuda isə gələcəkdə olmalıdır
+  const errors = validateForPublish(input, { requireFutureEnd: existing.status === "PUBLISHED" });
+  if (errors.length) return { ok: false, errors };
+
+  const survey: Survey = { ...existing, ...input, updatedAt: new Date().toISOString() };
+  await updateSurvey(survey);
+  revalidatePath("/", "layout");
+  return { ok: true, id: survey.id };
 }
 
 export async function closeSurvey(id: string) {

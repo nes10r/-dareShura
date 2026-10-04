@@ -14,6 +14,10 @@ interface Props {
   initial: SurveyInput;
   /** Auditoriyanın canlı hesablanması üçün (yalnız rol və fakültə) */
   people: { role: Role; faculty: string }[];
+  /** Dərc olunmuş sorğunun redaktəsi: status dəyişmir, yalnız "yadda saxla" */
+  published?: boolean;
+  /** Mövcud cavabların sayı — redaktə zamanı xəbərdarlıq üçün */
+  responseCount?: number;
 }
 
 // Azərbaycan vaxtı (UTC+4, yay vaxtı yoxdur) — server və client eyni dəyəri göstərir
@@ -45,7 +49,7 @@ function blankQuestion(type: QuestionType): Question {
 const inputCls =
   "w-full rounded-xl border border-line bg-white px-3.5 text-base outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100";
 
-export function SurveyEditor({ id, isTemplate, initial, people }: Props) {
+export function SurveyEditor({ id, isTemplate, initial, people, published = false, responseCount = 0 }: Props) {
   const router = useRouter();
   const [s, setS] = useState<SurveyInput>(initial);
   const [errors, setErrors] = useState<string[]>([]);
@@ -88,7 +92,8 @@ export function SurveyEditor({ id, isTemplate, initial, people }: Props) {
         setErrors(res.errors);
         return;
       }
-      if (intent === "publish") router.push(`/admin/surveys/${res.id}?published=${res.audienceSize ?? 0}`);
+      if (published) router.push(`/admin/surveys/${res.id}?updated=1`);
+      else if (intent === "publish") router.push(`/admin/surveys/${res.id}?published=${res.audienceSize ?? 0}`);
       else if (!id) router.replace(`/admin/surveys/${res.id}?saved=1`);
       else {
         router.refresh();
@@ -99,6 +104,16 @@ export function SurveyEditor({ id, isTemplate, initial, people }: Props) {
 
   return (
     <div className="space-y-5">
+      {published && responseCount > 0 && (
+        <p className="flex gap-3 rounded-2xl bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200">
+          <Icon name="bell" className="mt-0.5 size-5 shrink-0" />
+          <span>
+            Bu sorğuya artıq <b>{responseCount}</b> cavab verilib. Mətnləri və son tarixi rahat dəyişə bilərsiniz, amma sualı silmək,
+            növünü və ya variantların adını dəyişmək mövcud cavabların analitikasına təsir edəcək. Əlavə etdiyiniz yeni suallar
+            yalnız bundan sonra cavab verənlərə görünəcək.
+          </span>
+        </p>
+      )}
       {/* 1. Əsas məlumat */}
       <Section title="Əsas məlumat">
         <label className="block">
@@ -284,7 +299,11 @@ export function SurveyEditor({ id, isTemplate, initial, people }: Props) {
           </ul>
         )}
         <div className="flex gap-2">
-          {isTemplate ? (
+          {published ? (
+            <button type="button" disabled={pending} onClick={() => submit("publish")} className="h-12 flex-1 rounded-xl bg-brand-700 font-semibold text-white hover:bg-brand-800 disabled:opacity-60">
+              {pending ? "Saxlanılır…" : "Dəyişiklikləri yadda saxla"}
+            </button>
+          ) : isTemplate ? (
             <button type="button" disabled={pending} onClick={() => submit("template")} className="h-12 flex-1 rounded-xl bg-brand-700 font-semibold text-white hover:bg-brand-800 disabled:opacity-60">
               {pending ? "Saxlanılır…" : "Şablonu saxla"}
             </button>
