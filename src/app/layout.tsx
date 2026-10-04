@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: { default: "UNEC Alimlər Şurası", template: "%s · UNEC Alimlər Şurası" },
-  description: "UNEC Alimlər Şurasının rəqəmsal platforması",
+  title: { default: "UNEC Gənc Alimlər Şurası", template: "%s · UNEC Gənc Alimlər Şurası" },
+  description: "UNEC Gənc Alimlər Şurasının rəqəmsal platforması",
 };
 
 export const viewport: Viewport = {

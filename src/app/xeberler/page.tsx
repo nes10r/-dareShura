@@ -22,7 +22,7 @@ export default async function NewsListPage({ searchParams }: { searchParams: Pro
       <SiteHeader cta={cta} />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-24 sm:pt-28">
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Xəbərlər və elanlar</h1>
-        <p className="mt-2 text-muted">Alimlər Şurasının fəaliyyəti ilə bağlı son məlumatlar</p>
+        <p className="mt-2 text-muted">Gənc Alimlər Şurasının fəaliyyəti ilə bağlı son məlumatlar</p>
 
         <nav className="-mx-4 mt-6 overflow-x-auto px-4" aria-label="Kateqoriyalar">
           <ul className="flex w-max gap-2">

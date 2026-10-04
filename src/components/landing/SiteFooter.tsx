@@ -7,7 +7,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-3">
         <div>
           <Logo light />
-          <p className="mt-4 max-w-xs text-sm text-white/60">Azərbaycan Dövlət İqtisad Universitetinin Alimlər Şurası</p>
+          <p className="mt-4 max-w-xs text-sm text-white/60">Azərbaycan Dövlət İqtisad Universitetinin Gənc Alimlər Şurası</p>
         </div>
         <div>
           <p className="text-sm font-semibold">Bölmələr</p>
@@ -27,7 +27,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-white/10">
-        <p className="mx-auto max-w-6xl px-4 py-5 text-xs text-white/50">© {new Date().getFullYear()} UNEC Alimlər Şurası</p>
+        <p className="mx-auto max-w-6xl px-4 py-5 text-xs text-white/50">© {new Date().getFullYear()} UNEC Gənc Alimlər Şurası</p>
       </div>
     </footer>
   );

@@ -36,7 +36,7 @@ export function InviteLinkCard({ url, expiresAt }: { url: string; expiresAt: str
 
   async function share() {
     try {
-      await navigator.share({ title: "UNEC Alimlər Şurası — qeydiyyat", text: "Platformada qeydiyyat üçün link (24 saat etibarlıdır):", url });
+      await navigator.share({ title: "UNEC Gənc Alimlər Şurası — qeydiyyat", text: "Platformada qeydiyyat üçün link (24 saat etibarlıdır):", url });
     } catch {}
   }
 

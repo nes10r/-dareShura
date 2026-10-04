@@ -14,7 +14,7 @@ export function Logo({ href = "/", light = false }: { href?: string; light?: boo
       />
       <span className="leading-tight">
         <span className={`block text-sm font-bold tracking-wide ${light ? "text-white" : "text-ink"}`}>UNEC</span>
-        <span className={`block text-xs ${light ? "text-white/75" : "text-muted"}`}>Alimlər Şurası</span>
+        <span className={`block text-xs ${light ? "text-white/75" : "text-muted"}`}>Gənc Alimlər Şurası</span>
       </span>
     </Link>
   );

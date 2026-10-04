@@ -27,10 +27,10 @@ export default async function LandingPage() {
               Azərbaycan Dövlət İqtisad Universiteti · 1930
             </p>
             <h1 className="animate-pop mt-5 max-w-3xl text-4xl font-bold leading-[1.1] tracking-tight sm:text-6xl">
-              Alimlər Şurası
+              Gənc Alimlər Şurası
             </h1>
             <p className="animate-pop mt-4 max-w-xl text-base text-white/80 sm:text-lg">
-              Şuranın fəaliyyəti, qərarları və elanları — bir platformada.
+              Şuranın fəaliyyəti, tədbirləri və elanları — bir platformada.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <a
@@ -108,13 +108,13 @@ export default async function LandingPage() {
 
             <div className="order-1 lg:order-2">
               <p className="text-sm font-semibold uppercase tracking-wider text-brand-600">Haqqımızda</p>
-              <h2 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">Universitetin elmi idarəetmə orqanı</h2>
+              <h2 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">Gənc tədqiqatçıların birliyi</h2>
               <p className="mt-5 text-lg leading-relaxed text-slate-600">
-                Alimlər Şurası UNEC-in elmi, tədris və təşkilati fəaliyyətinə dair əsas məsələləri müzakirə edən və qərarlar qəbul edən
-                kollegial orqandır.
+                Gənc Alimlər Şurası UNEC-də elmi fəaliyyətlə məşğul olan gənc tədqiqatçıları bir araya gətirir, onların elmi
+                təşəbbüslərini və əməkdaşlığını dəstəkləyir.
               </p>
               <p className="mt-4 leading-relaxed text-slate-600">
-                Bu platforma Şuranın fəaliyyətini açıq və əlçatan etmək, üzvlər arasında əməkdaşlığı rəqəmsal mühitə daşımaq üçün yaradılıb.
+                Bu platforma Şuranın fəaliyyətini açıq və əlçatan etmək, üzvlər arasında elmi əməkdaşlığı rəqəmsal mühitə daşımaq üçün yaradılıb.
               </p>
               <Link href={cta.href} className="mt-8 inline-flex h-12 items-center gap-2 rounded-xl bg-brand-700 px-6 font-semibold text-white hover:bg-brand-800">
                 {user ? "Kabinetə keç" : "Üzv kabinetinə daxil ol"} <Icon name="arrow-right" className="size-4" />

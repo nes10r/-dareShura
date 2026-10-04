@@ -36,7 +36,7 @@ export function createSeed(superadminPassword: string): SeedData {
 
   const platformSurvey: Survey = {
     id: "s_platform",
-    title: "UNEC Alimlər Şurası Rəqəmsal Platformasının Funksionallıqlarının Müəyyənləşdirilməsi",
+    title: "UNEC Gənc Alimlər Şurası Rəqəmsal Platformasının Funksionallıqlarının Müəyyənləşdirilməsi",
     description:
       "Platformanın hansı funksiyalarla inkişaf etdiriləcəyini birlikdə müəyyən edək. Cavablarınız anonim təhlil olunacaq.",
     status: "PUBLISHED",
@@ -119,10 +119,10 @@ export function createSeed(superadminPassword: string): SeedData {
   // Başlanğıc xəbərlər — admin panelindən redaktə və ya silinə bilər
   const news: NewsItem[] = [
     article("n_launch", "alimler-surasinin-reqemsal-platformasi-istifadeye-verildi",
-      "Alimlər Şurasının rəqəmsal platforması istifadəyə verildi", "Xəbər", "/images/campus-aerial.jpg", 1,
+      "Gənc Alimlər Şurasının rəqəmsal platforması istifadəyə verildi", "Xəbər", "/images/campus-aerial.jpg", 1,
       "Şura üzvləri artıq iclas materiallarına, sorğulara və elanlara vahid platformadan çıxış əldə edir.",
       [
-        "UNEC Alimlər Şurasının rəqəmsal platforması pilot rejimdə istifadəyə verildi.",
+        "UNEC Gənc Alimlər Şurasının rəqəmsal platforması pilot rejimdə istifadəyə verildi.",
         "Platforma Şura üzvlərinə elanları izləmək, sorğularda iştirak etmək və gələcəkdə iclas materialları ilə işləmək üçün vahid məkan yaradır. Platforma mobil cihazlardan rahat istifadə nəzərə alınmaqla hazırlanıb.",
         "Təklif və iradlarınızı platformadakı sorğu vasitəsilə bildirə bilərsiniz.",
       ].join("\n\n")),
@@ -137,7 +137,7 @@ export function createSeed(superadminPassword: string): SeedData {
       "Şura iclaslarının qrafiki platformada dərc olunacaq", "İclas", "/images/campus-courtyard.jpg", 6,
       "Növbəti iclasların tarixləri və gündəliyi bu bölmədə elan ediləcək.",
       [
-        "Alimlər Şurasının iclaslarının qrafiki və gündəliyi bundan sonra platformanın Xəbərlər bölməsində dərc olunacaq.",
+        "Gənc Alimlər Şurasının iclaslarının qrafiki və gündəliyi bundan sonra platformanın Xəbərlər bölməsində dərc olunacaq.",
         "Yeni elanlardan xəbərdar olmaq üçün bölməni mütəmadi izləyin.",
       ].join("\n\n")),
   ];

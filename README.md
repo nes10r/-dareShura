@@ -1,4 +1,4 @@
-# UNEC Alimlər Şurası — Rəqəmsal Platforma
+# UNEC Gənc Alimlər Şurası — Rəqəmsal Platforma
 
 Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · Drizzle ORM · Neon PostgreSQL
 

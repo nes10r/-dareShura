@@ -20,11 +20,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
   const ics = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//UNEC Alimler Surasi//AZ",
+    "PRODID:-//UNEC Genc Alimler Surasi//AZ",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
-    `UID:${item.id}@unec-alimler-surasi`,
+    `UID:${item.id}@unec-genc-alimler-surasi`,
     `DTSTAMP:${icsDate(new Date().toISOString())}`,
     `DTSTART:${icsDate(start)}`,
     `DTEND:${icsDate(end)}`,
