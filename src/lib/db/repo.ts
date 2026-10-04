@@ -254,6 +254,16 @@ export async function findValidInvite(token: string) {
   return row ? toInvite(row) : null;
 }
 
+/** Aktiv linkin bitmə vaxtını dəyişir; link artıq deaktiv və ya müddəti bitmişdirsə false. */
+export async function extendInvite(id: string, expiresAt: Date) {
+  const updated = await db
+    .update(invites)
+    .set({ expiresAt })
+    .where(and(eq(invites.id, id), isNull(invites.revokedAt), gt(invites.expiresAt, new Date())))
+    .returning({ id: invites.id });
+  return updated.length > 0;
+}
+
 export async function revokeInvite(id: string) {
   await db.update(invites).set({ revokedAt: new Date() }).where(and(eq(invites.id, id), isNull(invites.revokedAt)));
 }

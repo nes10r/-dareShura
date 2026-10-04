@@ -19,6 +19,7 @@ export function InviteLinkCard({ url, expiresAt }: { url: string; expiresAt: str
 
   useEffect(() => {
     setCanShare(typeof navigator !== "undefined" && "share" in navigator);
+    setLeft(remaining(expiresAt));
     const t = setInterval(() => setLeft(remaining(expiresAt)), 30_000);
     return () => clearInterval(t);
   }, [expiresAt]);

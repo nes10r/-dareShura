@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { ConfirmSubmit } from "@/components/admin/ConfirmSubmit";
+import { InviteExtend } from "@/components/admin/InviteExtend";
 import { InviteLinkCard } from "@/components/admin/InviteLinkCard";
 import { Icon } from "@/components/Icon";
-import { requirePermission } from "@/lib/auth";
+import { hasPermission, requirePermission } from "@/lib/auth";
 import { getActiveInvite, listRecentInvites, listUsers } from "@/lib/db/repo";
 import { formatDateTime } from "@/lib/format";
 import { deactivateInvite, generateInvite } from "./actions";
@@ -18,7 +19,8 @@ async function siteOrigin() {
 }
 
 export default async function InvitePage() {
-  await requirePermission("users.invite");
+  const user = await requirePermission("users.invite");
+  const canExtend = hasPermission(user, "users.manage");
   const [active, history, users, origin] = await Promise.all([getActiveInvite(), listRecentInvites(10), listUsers(), siteOrigin()]);
   const names = new Map(users.map((u) => [u.id, u.name]));
   const now = Date.now();
@@ -30,13 +32,14 @@ export default async function InvitePage() {
     <div className="mx-auto max-w-2xl px-4 pt-6 sm:px-6 lg:pt-10">
       <h1 className="text-2xl font-bold tracking-tight">Qeydiyyat linki</h1>
       <p className="mt-1 text-muted">
-        Qeydiyyat yalnız bu link vasitəsilə mümkündür. Link 24 saat etibarlıdır, yalnız @unec.edu.az e-poçtları qəbul olunur.
+        Qeydiyyat yalnız bu link vasitəsilə mümkündür. Link 24 saat etibarlıdır (superadmin uzada bilər), yalnız @unec.edu.az e-poçtları qəbul olunur.
       </p>
 
       <div className="mt-6">
         {active ? (
           <>
             <InviteLinkCard url={`${origin}/register?token=${active.token}`} expiresAt={active.expiresAt} />
+            {canExtend && <InviteExtend key={active.expiresAt} inviteId={active.id} expiresAt={active.expiresAt} />}
             <div className="mt-3 grid gap-2 sm:flex">
               <form action={generateInvite} className="grid sm:flex-1">
                 <ConfirmSubmit
