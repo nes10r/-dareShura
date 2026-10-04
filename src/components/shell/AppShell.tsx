@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/Icon";
+import { Avatar } from "@/components/ui/Avatar";
 import { Logo } from "@/components/ui/Logo";
 import { logout } from "@/app/login/actions";
 import type { NavEntry } from "@/lib/modules/types";
 
 interface ShellUser {
   name: string;
-  initials: string;
+  avatar: string | null;
   subtitle: string;
 }
 
@@ -113,9 +114,9 @@ export function AppShell({ user, nav, children }: { user: ShellUser; nav: NavEnt
         </nav>
         <div className="border-t border-line p-3">
           <div className="flex items-center gap-3 rounded-xl p-2">
-            <span className="grid size-10 place-items-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
-              {user.initials}
-            </span>
+            <Link href="/profile" aria-label="Profil" className="rounded-full">
+              <Avatar name={user.name} src={user.avatar} size="md" />
+            </Link>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">{user.name}</p>
               <p className="truncate text-xs text-muted">{user.subtitle}</p>
@@ -134,8 +135,8 @@ export function AppShell({ user, nav, children }: { user: ShellUser; nav: NavEnt
         {/* Mobil üst panel */}
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line/70 bg-white/90 px-4 backdrop-blur lg:hidden">
           <Logo href="/dashboard" />
-          <Link href="/profile" className="grid size-9 place-items-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700" aria-label="Profil">
-            {user.initials}
+          <Link href="/profile" className="rounded-full" aria-label="Profil">
+            <Avatar name={user.name} src={user.avatar} size="sm" />
           </Link>
         </header>
 

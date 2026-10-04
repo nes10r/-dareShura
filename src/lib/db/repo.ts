@@ -3,7 +3,7 @@ import { and, asc, count, desc, eq, gt, isNull, lte } from "drizzle-orm";
 import { facultyList } from "../faculties";
 import type { AnswerValue, Invite, NewsItem, Survey, SurveyResponse, User } from "../types";
 import { db } from "./client";
-import { invites, news, surveyResponses, surveys, users } from "./schema";
+import { invites, news, surveyResponses, surveys, userAvatars, users } from "./schema";
 
 /**
  * Verilənlər bazası ilə bütün iş bu qatdan keçir.
@@ -20,7 +20,7 @@ export function newId(prefix: string) {
 // ---------- Users ----------
 
 type UserRow = typeof users.$inferSelect;
-const toUser = (r: UserRow): User => ({ ...r, createdAt: r.createdAt.toISOString() });
+const toUser = (r: UserRow): User => ({ ...r, avatarUpdatedAt: iso(r.avatarUpdatedAt), createdAt: r.createdAt.toISOString() });
 
 export async function findUserById(id: string) {
   const [row] = await db.select().from(users).where(eq(users.id, id)).limit(1);
@@ -188,7 +188,7 @@ export async function deleteNews(id: string) {
 export async function insertUser(user: User) {
   const inserted = await db
     .insert(users)
-    .values({ ...user, email: user.email.toLowerCase(), createdAt: new Date(user.createdAt) })
+    .values({ ...user, email: user.email.toLowerCase(), avatarUpdatedAt: null, createdAt: new Date(user.createdAt) })
     .onConflictDoNothing({ target: users.email })
     .returning({ id: users.id });
   return inserted.length > 0;
@@ -272,4 +272,25 @@ export async function listRecentInvites(limit = 10) {
 export async function listFaculties() {
   const rows = await db.selectDistinct({ faculty: users.faculty }).from(users);
   return facultyList(rows.map((r) => r.faculty));
+}
+
+// ---------- Profil şəkilləri ----------
+
+export async function setAvatar(userId: string, mime: string, base64: string) {
+  const now = new Date();
+  await db
+    .insert(userAvatars)
+    .values({ userId, mime, data: base64, updatedAt: now })
+    .onConflictDoUpdate({ target: userAvatars.userId, set: { mime, data: base64, updatedAt: now } });
+  await db.update(users).set({ avatarUpdatedAt: now }).where(eq(users.id, userId));
+}
+
+export async function removeAvatar(userId: string) {
+  await db.delete(userAvatars).where(eq(userAvatars.userId, userId));
+  await db.update(users).set({ avatarUpdatedAt: null }).where(eq(users.id, userId));
+}
+
+export async function getAvatar(userId: string) {
+  const [row] = await db.select().from(userAvatars).where(eq(userAvatars.userId, userId)).limit(1);
+  return row ?? null;
 }

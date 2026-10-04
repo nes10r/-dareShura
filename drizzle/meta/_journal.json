@@ -29,6 +29,13 @@
       "when": 1791112145234,
       "tag": "0003_news_meta",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791119073191,
+      "tag": "0004_avatars",
+      "breakpoints": true
     }
   ]
 }

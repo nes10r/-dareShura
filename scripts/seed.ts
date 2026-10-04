@@ -32,7 +32,7 @@ async function main() {
     await db.delete(schema.users);
   }
 
-  await db.insert(schema.users).values(data.users.map((u) => ({ ...u, createdAt: new Date(u.createdAt) })));
+  await db.insert(schema.users).values(data.users.map((u) => ({ ...u, avatarUpdatedAt: null, createdAt: new Date(u.createdAt) })));
   for (const s of data.surveys) await insertSurvey(s);
   if (data.responses.length) {
     await db.insert(schema.surveyResponses).values(

@@ -10,6 +10,7 @@ export interface User {
   position: string;
   academicTitle: string | null;
   inviteId?: string | null;
+  avatarUpdatedAt?: string | null;
   createdAt: string;
 }
 

@@ -14,7 +14,18 @@ export const users = pgTable("users", {
   academicTitle: text("academic_title"),
   /** Hansı dəvət linki ilə qeydiyyatdan keçib (audit üçün) */
   inviteId: text("invite_id"),
+  /** Profil şəklinin son yenilənmə vaxtı (null — şəkil yoxdur); URL-də keş versiyası kimi istifadə olunur */
+  avatarUpdatedAt: ts("avatar_updated_at"),
   createdAt: ts("created_at").notNull().defaultNow(),
+});
+
+/** Profil şəkilləri ayrıca cədvəldə — istifadəçi siyahıları şəkil məlumatını yükləməsin */
+export const userAvatars = pgTable("user_avatars", {
+  userId: text("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  mime: text("mime").notNull(),
+  /** base64 (brauzerdə 320×320-ə kiçildilmiş, ~20–40 KB) */
+  data: text("data").notNull(),
+  updatedAt: ts("updated_at").notNull().defaultNow(),
 });
 
 export const surveys = pgTable(

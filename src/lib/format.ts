@@ -55,3 +55,8 @@ export function slugify(text: string) {
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
 }
+
+/** Profil şəklinin URL-i (versiyalı — şəkil dəyişəndə keş yenilənir); şəkil yoxdursa null */
+export function avatarUrl(user: { id: string; avatarUpdatedAt?: string | null }) {
+  return user.avatarUpdatedAt ? `/api/avatar/${user.id}?v=${Date.parse(user.avatarUpdatedAt)}` : null;
+}

@@ -4,7 +4,8 @@ import { ConfirmSubmit } from "@/components/admin/ConfirmSubmit";
 import { Icon } from "@/components/Icon";
 import { requirePermission } from "@/lib/auth";
 import { listUsers } from "@/lib/db/repo";
-import { formatDate, initials } from "@/lib/format";
+import { Avatar } from "@/components/ui/Avatar";
+import { avatarUrl, formatDate } from "@/lib/format";
 import { ROLE_LABELS, type Role } from "@/lib/types";
 import { setUserRole } from "./actions";
 
@@ -84,9 +85,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
           return (
             <li key={u.id} className="flex flex-col gap-3 rounded-2xl bg-white p-4 ring-1 ring-line sm:flex-row sm:items-center">
               <div className="flex min-w-0 flex-1 items-center gap-3">
-                <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
-                  {initials(u.name)}
-                </span>
+                <Avatar name={u.name} src={avatarUrl(u)} size="lg" />
                 <div className="min-w-0">
                   <p className="flex flex-wrap items-center gap-2">
                     <span className="truncate font-semibold">{u.name}</span>
