@@ -25,7 +25,7 @@ export default async function SurveyPage({ params }: { params: Promise<{ id: str
     return (
       <SurveyRunner
         userId={user.id}
-        survey={{ id: survey.id, title: survey.title, description: survey.description, questions: survey.questions }}
+        survey={{ id: survey.id, title: survey.title, description: survey.description, questions: survey.questions, anonymous: survey.anonymous }}
         minutes={estimateMinutes(survey)}
         deadline={survey.endsAt ? formatDate(survey.endsAt) : null}
       />

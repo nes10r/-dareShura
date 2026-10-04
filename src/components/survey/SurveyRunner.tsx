@@ -9,7 +9,7 @@ import type { AnswerValue, Question } from "@/lib/types";
 
 interface Props {
   userId: string;
-  survey: { id: string; title: string; description: string; questions: Question[] };
+  survey: { id: string; title: string; description: string; questions: Question[]; anonymous: boolean };
   minutes: number;
   deadline: string | null;
 }
@@ -129,7 +129,12 @@ export function SurveyRunner({ userId, survey, minutes, deadline }: Props) {
           <ul className="mt-6 space-y-3 text-sm text-slate-600">
             <li className="flex gap-3"><Icon name="check" className="size-5 shrink-0 text-emerald-600" />Hər ekranda bir sual — sürətli və rahat</li>
             <li className="flex gap-3"><Icon name="check" className="size-5 shrink-0 text-emerald-600" />Cavablarınız avtomatik yadda saxlanılır</li>
-            <li className="flex gap-3"><Icon name="lock" className="size-5 shrink-0 text-emerald-600" />Nəticələr ümumiləşdirilmiş formada təhlil olunur</li>
+            <li className="flex gap-3">
+              <Icon name="lock" className="size-5 shrink-0 text-emerald-600" />
+              {survey.anonymous
+                ? "Sorğu anonimdir — cavablarınız adınızla əlaqələndirilmir"
+                : "Cavablarınızı yalnız platforma administratorları adınızla birlikdə görə bilər"}
+            </li>
           </ul>
         </div>
         <BottomBar>

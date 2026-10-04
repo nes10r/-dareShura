@@ -265,7 +265,23 @@ export function SurveyEditor({ id, isTemplate, initial, people, published = fals
           </Section>
 
           {/* 5. Nəticələr */}
-          <Section title="Nəticələrin görünməsi">
+          <Section title="Məxfilik və nəticələr">
+            <label className="mb-4 flex cursor-pointer items-start gap-3 border-b border-line pb-4">
+              <input
+                type="checkbox"
+                checked={s.anonymous}
+                onChange={(e) => patch({ anonymous: e.target.checked })}
+                className="mt-0.5 size-5 accent-brand-700"
+              />
+              <span>
+                <span className="block text-sm font-medium">Anonim sorğu</span>
+                <span className="block text-xs text-muted">
+                  {s.anonymous
+                    ? "Analitikada cavab verənlərin adı və şəkli göstərilməyəcək. İştirakçılara cavablarının anonim olduğu bildiriləcək."
+                    : "Administratorlar analitikada kimin hansı cavabı verdiyini görəcək. İştirakçılara bu barədə əvvəlcədən bildiriləcək."}
+                </span>
+              </span>
+            </label>
             <label className="flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"

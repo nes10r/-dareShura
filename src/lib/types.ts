@@ -72,6 +72,8 @@ export interface Survey {
   resultsVisibleUntil: string | null;
   questions: Question[];
   isTemplate: boolean;
+  /** Anonim sorğu: administratorlar cavab verənlərin adını görmür */
+  anonymous: boolean;
   createdBy: string;
   createdAt: string;
   updatedAt: string;

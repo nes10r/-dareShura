@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StatusChip } from "@/components/admin/StatusChip";
 import { Icon } from "@/components/Icon";
-import { StatsView } from "@/components/survey/StatsView";
+import { StatsView, type Person } from "@/components/survey/StatsView";
 import { requirePermission } from "@/lib/auth";
 import { getSurvey, listResponsesBySurvey, listUsers } from "@/lib/db/repo";
+import { avatarUrl } from "@/lib/format";
 import { getEffectiveStatus, getSurveyStats, resolveAudience } from "@/lib/surveys/service";
 
 export default async function SurveyAnalyticsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -16,6 +17,10 @@ export default async function SurveyAnalyticsPage({ params }: { params: Promise<
   const [users, responses] = await Promise.all([listUsers(), listResponsesBySurvey(id)]);
   const audience = resolveAudience(survey, users);
   const respondedIds = new Set(responses.map((r) => r.userId));
+  // Anonim sorğuda adlar heç vaxt ötürülmür
+  const people: Record<string, Person> | undefined = survey.anonymous
+    ? undefined
+    : Object.fromEntries(users.map((u) => [u.id, { name: u.name, avatar: avatarUrl(u) }]));
   const rate = audience.length ? Math.round((responses.length / audience.length) * 100) : 0;
 
   // Fakültələr üzrə iştirak
@@ -67,7 +72,14 @@ export default async function SurveyAnalyticsPage({ params }: { params: Promise<
       {responses.length === 0 ? (
         <p className="rounded-2xl bg-white p-6 text-center text-muted ring-1 ring-line">Hələ cavab yoxdur.</p>
       ) : (
-        <StatsView stats={getSurveyStats(survey, responses)} total={responses.length} showTexts />
+        <>
+          {survey.anonymous && (
+            <p className="mb-4 flex items-center gap-2 rounded-xl bg-surface px-4 py-3 text-sm text-muted ring-1 ring-line">
+              <Icon name="lock" className="size-4 shrink-0" /> Anonim sorğu — cavab verənlərin adları göstərilmir.
+            </p>
+          )}
+          <StatsView stats={getSurveyStats(survey, responses)} total={responses.length} showTexts people={people} />
+        </>
       )}
     </div>
   );

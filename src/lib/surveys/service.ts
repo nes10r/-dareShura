@@ -168,30 +168,45 @@ export function validateAnswers(survey: Survey, raw: Record<string, unknown>) {
 export interface QuestionStats {
   question: Question;
   answered: number;
-  /** single / multiple / scale üçün: variant → say */
-  counts?: { label: string; count: number }[];
+  /** single / multiple / scale üçün: variant → say və həmin variantı seçənlər */
+  counts?: { label: string; count: number; userIds: string[] }[];
   average?: number;
-  texts?: string[];
+  texts?: { text: string; userId: string }[];
 }
 
 export function getSurveyStats(survey: Survey, responses: SurveyResponse[]): QuestionStats[] {
   return survey.questions.map((question) => {
-    const values = responses.map((r) => r.answers[question.id]).filter((v) => v !== undefined && v !== "");
-    const base = { question, answered: values.length };
+    const answers = responses
+      .map((r) => ({ userId: r.userId, value: r.answers[question.id] }))
+      .filter((a) => a.value !== undefined && a.value !== "");
+    const base = { question, answered: answers.length };
 
-    if (question.type === "text") return { ...base, texts: values.map(String) };
+    if (question.type === "text") return { ...base, texts: answers.map((a) => ({ text: String(a.value), userId: a.userId })) };
+
+    const chose = (label: string) =>
+      answers
+        .filter((a) => (Array.isArray(a.value) ? a.value.includes(label) : String(a.value) === label))
+        .map((a) => a.userId);
 
     if (question.type === "scale") {
       const max = question.scaleMax ?? 5;
-      const nums = values.filter((v): v is number => typeof v === "number");
+      const nums = answers.map((a) => a.value).filter((v): v is number => typeof v === "number");
       return {
         ...base,
-        counts: Array.from({ length: max }, (_, i) => ({ label: String(i + 1), count: nums.filter((n) => n === i + 1).length })),
+        counts: Array.from({ length: max }, (_, i) => {
+          const userIds = chose(String(i + 1));
+          return { label: String(i + 1), count: userIds.length, userIds };
+        }),
         average: nums.length ? nums.reduce((s, n) => s + n, 0) / nums.length : undefined,
       };
     }
 
-    const flat = values.flatMap((v) => (Array.isArray(v) ? v : [String(v)]));
-    return { ...base, counts: (question.options ?? []).map((label) => ({ label, count: flat.filter((x) => x === label).length })) };
+    return {
+      ...base,
+      counts: (question.options ?? []).map((label) => {
+        const userIds = chose(label);
+        return { label, count: userIds.length, userIds };
+      }),
+    };
   });
 }

@@ -1,6 +1,6 @@
 import { initials } from "@/lib/format";
 
-const SIZES = { sm: "size-9 text-xs", md: "size-10 text-sm", lg: "size-11 text-sm", xl: "size-24 text-2xl" } as const;
+const SIZES = { xs: "size-7 text-[10px]", sm: "size-9 text-xs", md: "size-10 text-sm", lg: "size-11 text-sm", xl: "size-24 text-2xl" } as const;
 
 /** Profil şəkli; şəkil yoxdursa ad-soyadın baş hərfləri. */
 export function Avatar({ name, src, size = "md", className = "" }: { name: string; src?: string | null; size?: keyof typeof SIZES; className?: string }) {

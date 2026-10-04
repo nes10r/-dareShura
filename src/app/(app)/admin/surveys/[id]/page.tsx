@@ -75,6 +75,7 @@ export default async function AdminSurveyPage({
               resultsVisibility: survey.resultsVisibility,
               resultsVisibleUntil: survey.resultsVisibleUntil,
               questions: survey.questions,
+              anonymous: survey.anonymous,
             }}
             people={users.map((u) => ({ role: u.role, faculty: u.faculty }))}
           />

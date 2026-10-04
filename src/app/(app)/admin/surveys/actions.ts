@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePermission } from "@/lib/auth";
-import { deleteSurvey, getSurvey, insertSurvey, listUsers, newId, updateSurvey } from "@/lib/db/repo";
+import { deleteSurvey, getSurvey, insertSurvey, listResponsesBySurvey, listUsers, newId, updateSurvey } from "@/lib/db/repo";
 import { resolveAudience } from "@/lib/surveys/service";
 import { cleanFaculty } from "@/lib/faculties";
 import { type Audience, type Question, type ResultsVisibility, type Role, type Survey } from "@/lib/types";
@@ -17,6 +17,7 @@ export interface SurveyInput {
   resultsVisibility: ResultsVisibility;
   resultsVisibleUntil: string | null;
   questions: Question[];
+  anonymous: boolean;
 }
 
 export type SaveResult = { ok: true; id: string; audienceSize?: number } | { ok: false; errors: string[] };
@@ -38,6 +39,7 @@ function sanitize(input: SurveyInput): SurveyInput {
     },
     resultsVisibility: input.resultsVisibility === "RESPONDENTS" ? "RESPONDENTS" : "NONE",
     resultsVisibleUntil: isoOrNull(input.resultsVisibleUntil),
+    anonymous: !!input.anonymous,
     questions: (input.questions ?? []).slice(0, 100).map((q) => ({
       id: String(q.id || newId("q")),
       type: (["single", "multiple", "scale", "text"] as const).includes(q.type) ? q.type : "single",
@@ -120,6 +122,10 @@ export async function saveSurvey(id: string | null, raw: SurveyInput, intent: "d
 async function updatePublishedSurvey(existing: Survey, input: SurveyInput): Promise<SaveResult> {
   // Bağlanmış sorğuda son tarix keçmiş ola bilər; aktiv sorğuda isə gələcəkdə olmalıdır
   const errors = validateForPublish(input, { requireFutureEnd: existing.status === "PUBLISHED" });
+  // Anonimlik vədi verilmiş sorğuda cavablar varsa, adları açmaq olmaz
+  if (existing.anonymous && !input.anonymous && (await listResponsesBySurvey(existing.id)).length > 0) {
+    errors.push("Bu sorğu anonim kimi keçirilib və artıq cavabları var — anonimliyi söndürmək olmaz.");
+  }
   if (errors.length) return { ok: false, errors };
 
   const survey: Survey = { ...existing, ...input, updatedAt: new Date().toISOString() };

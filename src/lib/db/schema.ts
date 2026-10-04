@@ -44,6 +44,7 @@ export const surveys = pgTable(
     resultsVisibleUntil: ts("results_visible_until"),
     questions: jsonb("questions").$type<Question[]>().notNull(),
     isTemplate: boolean("is_template").notNull().default(false),
+    anonymous: boolean("anonymous").notNull().default(false),
     createdBy: text("created_by").notNull().references(() => users.id),
     createdAt: ts("created_at").notNull().defaultNow(),
     updatedAt: ts("updated_at").notNull().defaultNow(),

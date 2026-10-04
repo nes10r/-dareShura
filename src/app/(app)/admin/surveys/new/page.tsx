@@ -17,6 +17,7 @@ const EMPTY: SurveyInput = {
   resultsVisibility: "NONE",
   resultsVisibleUntil: null,
   questions: [],
+  anonymous: false,
 };
 
 export default async function NewSurveyPage({ searchParams }: { searchParams: Promise<{ from?: string; template?: string }> }) {
@@ -28,7 +29,7 @@ export default async function NewSurveyPage({ searchParams }: { searchParams: Pr
   const asTemplate = template === "1";
 
   const initial: SurveyInput = source
-    ? { ...EMPTY, title: source.title, description: source.description, audience: source.audience, questions: source.questions }
+    ? { ...EMPTY, title: source.title, description: source.description, audience: source.audience, questions: source.questions, anonymous: source.anonymous }
     : EMPTY;
 
   return (

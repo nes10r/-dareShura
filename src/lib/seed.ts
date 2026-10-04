@@ -48,6 +48,7 @@ export function createSeed(superadminPassword: string): SeedData {
     resultsVisibility: "NONE",
     resultsVisibleUntil: null,
     isTemplate: false,
+    anonymous: true,
     createdBy: "u_super",
     createdAt: iso(-3),
     updatedAt: iso(-1),
@@ -104,6 +105,7 @@ export function createSeed(superadminPassword: string): SeedData {
     description: "Hər tədbirdən sonra istifadə üçün standart şablon.",
     audience: ALL,
     isTemplate: true,
+    anonymous: false,
     questions: [
       q("q1", "scale", "Tədbiri ümumilikdə necə qiymətləndirirsiniz?", { scaleMax: 5, scaleMinLabel: "Zəif", scaleMaxLabel: "Əla" }),
       q("q2", "single", "Tədbirin müddəti uyğun idimi?", { options: ["Qısa idi", "Uyğun idi", "Uzun idi"] }),
