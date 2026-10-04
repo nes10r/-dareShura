@@ -22,6 +22,13 @@
       "when": 1791055936201,
       "tag": "0002_invites",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791112145234,
+      "tag": "0003_news_meta",
+      "breakpoints": true
     }
   ]
 }

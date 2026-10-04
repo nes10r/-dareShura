@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { formatDate } from "@/lib/format";
+import { Icon } from "@/components/Icon";
+import { formatDate, formatShortDateTime } from "@/lib/format";
 import type { NewsItem } from "@/lib/types";
 import { NewsCover } from "./NewsCover";
 
@@ -9,6 +10,19 @@ const CATEGORY_STYLES: Record<string, string> = {
   İclas: "bg-emerald-50 text-emerald-700",
   Tədbir: "bg-violet-50 text-violet-700",
 };
+
+/** İclas/tədbir vaxtı və ya elanın son tarixi — kartın üzərində kiçik nişan */
+function EventBadge({ item }: { item: NewsItem }) {
+  const when = item.meta.startsAt ?? item.meta.deadline;
+  if (!when) return null;
+  return (
+    <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-ink shadow-sm backdrop-blur">
+      <Icon name={item.meta.startsAt ? "calendar" : "clock"} className="size-3.5 text-brand-700" />
+      {item.meta.startsAt ? "" : "Son tarix: "}
+      {formatShortDateTime(when)}
+    </span>
+  );
+}
 
 export function CategoryChip({ category, onDark = false }: { category: string; onDark?: boolean }) {
   return (
@@ -37,6 +51,7 @@ export function FeaturedNewsCard({ item }: { item: NewsItem }) {
           priority
           className="transition duration-700 group-hover:scale-[1.03]"
         />
+        <EventBadge item={item} />
       </div>
       <div className="relative flex flex-col justify-center p-6 text-white sm:p-8 lg:col-span-2">
         <div className="flex items-center gap-3 text-sm text-white/70">
@@ -66,6 +81,7 @@ export function NewsCard({ item }: { item: NewsItem }) {
           sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
           className="transition duration-500 group-hover:scale-[1.04]"
         />
+        <EventBadge item={item} />
       </div>
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-center gap-3 text-xs text-muted">

@@ -5,11 +5,30 @@ export function formatDate(iso: string | null | undefined) {
   return new Intl.DateTimeFormat("az", { day: "numeric", month: "long", year: "numeric", timeZone: TZ }).format(new Date(iso));
 }
 
+function formatTime(iso: string) {
+  return new Intl.DateTimeFormat("az", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: TZ }).format(new Date(iso));
+}
+
+/** "15 oktyabr 2026, 14:00" — Intl "az" lokalı tarix-vaxt arasına ingiliscə "at" qoyduğu üçün əl ilə birləşdirilir */
 export function formatDateTime(iso: string | null | undefined) {
   if (!iso) return "—";
-  return new Intl.DateTimeFormat("az", {
-    day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: TZ,
-  }).format(new Date(iso));
+  return `${formatDate(iso)}, ${formatTime(iso)}`;
+}
+
+/** Qısa tarix-vaxt: "15 okt · 14:00" (kartlar üçün) */
+export function formatShortDateTime(iso: string | null | undefined) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const day = new Intl.DateTimeFormat("az", { day: "numeric", month: "short", timeZone: TZ }).format(d);
+  return `${day} · ${formatTime(iso)}`;
+}
+
+/** Vaxt aralığı: eyni gündürsə "15 oktyabr 2026, 14:00 – 17:00" */
+export function formatDateTimeRange(start: string, end?: string | null) {
+  if (!end) return formatDateTime(start);
+  const sameDay = formatDate(start) === formatDate(end);
+  if (!sameDay) return `${formatDateTime(start)} – ${formatDateTime(end)}`;
+  return `${formatDateTime(start)} – ${formatTime(end)}`;
 }
 
 export function daysLeftLabel(days: number | null) {

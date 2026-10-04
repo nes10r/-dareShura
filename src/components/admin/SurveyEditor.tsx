@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { saveSurvey, type SurveyInput } from "@/app/(app)/admin/surveys/actions";
 import { Icon } from "@/components/Icon";
 import { estimateMinutes } from "@/lib/surveys/service";
+import { fromLocalInput, toLocalInput } from "@/lib/datetime";
 import { facultyList } from "@/lib/faculties";
 import { ROLE_LABELS, type Question, type QuestionType, type Role } from "@/lib/types";
 
@@ -20,10 +21,6 @@ interface Props {
   responseCount?: number;
 }
 
-// Azərbaycan vaxtı (UTC+4, yay vaxtı yoxdur) — server və client eyni dəyəri göstərir
-const BAKU_OFFSET = 4 * 60 * 60 * 1000;
-const toLocalInput = (iso: string | null) => (iso ? new Date(Date.parse(iso) + BAKU_OFFSET).toISOString().slice(0, 16) : "");
-const fromLocalInput = (v: string) => (v ? new Date(`${v}:00+04:00`).toISOString() : null);
 
 const TYPE_OPTIONS: { type: QuestionType; label: string }[] = [
   { type: "single", label: "Tək seçim" },

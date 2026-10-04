@@ -103,6 +103,20 @@ export const ROLE_LABELS: Record<Role, string> = {
 export const NEWS_CATEGORIES = ["Xəbər", "Elan", "İclas", "Tədbir"] as const;
 export type NewsCategory = (typeof NEWS_CATEGORIES)[number];
 
+export type EventFormat = "Əyani" | "Onlayn" | "Hibrid";
+
+/** Kateqoriyaya xas sahələr (hamısı istəyə bağlı). Tarixlər ISO formatında. */
+export interface NewsMeta {
+  startsAt?: string;
+  endsAt?: string;
+  location?: string;
+  format?: EventFormat;
+  onlineUrl?: string;
+  registrationUrl?: string;
+  deadline?: string;
+  contact?: string;
+}
+
 export interface NewsItem {
   id: string;
   slug: string;
@@ -111,6 +125,7 @@ export interface NewsItem {
   body: string;
   category: NewsCategory;
   coverImage: string | null;
+  meta: NewsMeta;
   isPublished: boolean;
   publishedAt: string | null;
   createdBy: string;

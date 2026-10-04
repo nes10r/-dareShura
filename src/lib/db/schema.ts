@@ -1,5 +1,5 @@
 import { boolean, index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import type { AnswerValue, Audience, NewsCategory, Question, ResultsVisibility, Role, SurveyStatus } from "../types";
+import type { AnswerValue, Audience, NewsCategory, NewsMeta, Question, ResultsVisibility, Role, SurveyStatus } from "../types";
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 
@@ -63,6 +63,8 @@ export const news = pgTable(
     body: text("body").notNull().default(""),
     category: text("category").$type<NewsCategory>().notNull().default("Xəbər"),
     coverImage: text("cover_image"),
+    /** Kateqoriyaya xas sahələr: tarix, məkan, qeydiyyat linki, son tarix və s. */
+    meta: jsonb("meta").$type<NewsMeta>().notNull().default({}),
     isPublished: boolean("is_published").notNull().default(false),
     publishedAt: ts("published_at"),
     createdBy: text("created_by").notNull().references(() => users.id),

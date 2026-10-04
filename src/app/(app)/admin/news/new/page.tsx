@@ -18,7 +18,7 @@ export default async function NewNewsPage() {
         <NewsEditor
           id={null}
           published={false}
-          initial={{ title: "", summary: "", body: "", category: "Xəbər", coverImage: "/images/campus-aerial.jpg" }}
+          initial={{ title: "", summary: "", body: "", category: "Xəbər", coverImage: "/images/campus-aerial.jpg", meta: {} }}
         />
       </div>
     </div>

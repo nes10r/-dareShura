@@ -5,6 +5,7 @@ import { NewsEditor } from "@/components/admin/NewsEditor";
 import { Icon } from "@/components/Icon";
 import { requirePermission } from "@/lib/auth";
 import { getNews } from "@/lib/db/repo";
+import { bodyToHtml } from "@/lib/news-content";
 import { removeNews } from "../actions";
 
 export default async function EditNewsPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> }) {
@@ -41,7 +42,7 @@ export default async function EditNewsPage({ params, searchParams }: { params: P
         <NewsEditor
           id={item.id}
           published={item.isPublished}
-          initial={{ title: item.title, summary: item.summary, body: item.body, category: item.category, coverImage: item.coverImage }}
+          initial={{ title: item.title, summary: item.summary, body: bodyToHtml(item.body), category: item.category, coverImage: item.coverImage, meta: item.meta }}
         />
       </div>
     </div>

@@ -112,7 +112,7 @@ export function createSeed(superadminPassword: string): SeedData {
   };
 
   const article = (id: string, slug: string, title: string, category: NewsItem["category"], coverImage: string, daysAgo: number, summary: string, body: string): NewsItem => ({
-    id, slug, title, category, coverImage, summary, body,
+    id, slug, title, category, coverImage, summary, body, meta: {},
     isPublished: true, publishedAt: iso(-daysAgo), createdBy: "u_super", createdAt: iso(-daysAgo), updatedAt: iso(-daysAgo),
   });
 

@@ -5,24 +5,48 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { saveNews, type NewsInput } from "@/app/(app)/admin/news/actions";
 import { Icon } from "@/components/Icon";
-import { NEWS_CATEGORIES, NEWS_COVER_PRESETS } from "@/lib/types";
+import { fromLocalInput, toLocalInput } from "@/lib/datetime";
+import { CATEGORY_FIELDS, CATEGORY_TEMPLATES, EVENT_FORMATS, META_LABELS, htmlToText } from "@/lib/news-content";
+import { NEWS_CATEGORIES, NEWS_COVER_PRESETS, type NewsMeta } from "@/lib/types";
+import { RichTextEditor } from "./RichTextEditor";
 
 const inputCls =
   "w-full rounded-xl border border-line bg-white px-3.5 text-base outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100";
 
-export function NewsEditor({ id, initial, published }: { id: string | null; initial: Omit<NewsInput, "publish">; published: boolean }) {
+const CATEGORY_HINTS: Record<string, string> = {
+  Xəbər: "Fəaliyyətlə bağlı ümumi məlumat",
+  Elan: "Son tarixi olan müraciət, müsabiqə və s.",
+  İclas: "Şura iclası: tarix, məkan, gündəlik",
+  Tədbir: "Konfrans, seminar: proqram, qeydiyyat",
+};
+
+type Draft = Omit<NewsInput, "publish">;
+
+export function NewsEditor({ id, initial, published }: { id: string | null; initial: Draft; published: boolean }) {
   const router = useRouter();
-  const [n, setN] = useState(initial);
+  const [n, setN] = useState<Draft>(initial);
   const isPreset = !n.coverImage || NEWS_COVER_PRESETS.some((p) => p.src === n.coverImage);
   const [customUrl, setCustomUrl] = useState(isPreset ? "" : (n.coverImage ?? ""));
+  const [resetKey, setResetKey] = useState(0);
   const [errors, setErrors] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const patch = (p: Partial<typeof n>) => {
+  const patch = (p: Partial<Draft>) => {
     setN((prev) => ({ ...prev, ...p }));
     setSaved(false);
   };
+  const patchMeta = (p: Partial<NewsMeta>) => patch({ meta: { ...n.meta, ...p } });
+
+  const fields = CATEGORY_FIELDS[n.category];
+  const template = CATEGORY_TEMPLATES[n.category];
+
+  function applyTemplate() {
+    if (!template) return;
+    if (htmlToText(n.body) && !window.confirm("Mövcud mətn şablonla əvəz olunsun?")) return;
+    patch({ body: template });
+    setResetKey((k) => k + 1);
+  }
 
   function submit(publish: boolean) {
     setErrors([]);
@@ -36,6 +60,31 @@ export function NewsEditor({ id, initial, published }: { id: string | null; init
       }
     });
   }
+
+  const dateField = (key: "startsAt" | "endsAt" | "deadline") => (
+    <label key={key} className="block">
+      <span className="text-sm font-medium">{META_LABELS[key]}</span>
+      <input
+        type="datetime-local"
+        value={toLocalInput(n.meta[key])}
+        onChange={(e) => patchMeta({ [key]: fromLocalInput(e.target.value) ?? undefined })}
+        className={`${inputCls} mt-1.5 h-12`}
+      />
+    </label>
+  );
+
+  const textField = (key: "location" | "contact" | "onlineUrl" | "registrationUrl", placeholder: string, url = false) => (
+    <label key={key} className="block">
+      <span className="text-sm font-medium">{META_LABELS[key]}</span>
+      <input
+        value={n.meta[key] ?? ""}
+        onChange={(e) => patchMeta({ [key]: e.target.value || undefined })}
+        inputMode={url ? "url" : undefined}
+        placeholder={placeholder}
+        className={`${inputCls} mt-1.5 h-12`}
+      />
+    </label>
+  );
 
   return (
     <div className="space-y-5">
@@ -60,18 +109,67 @@ export function NewsEditor({ id, initial, published }: { id: string | null; init
               </button>
             ))}
           </div>
+          <p className="mt-2 text-xs text-muted">{CATEGORY_HINTS[n.category]}</p>
         </fieldset>
 
         <label className="mt-4 block">
           <span className="text-sm font-medium">Qısa məzmun</span>
           <textarea value={n.summary} onChange={(e) => patch({ summary: e.target.value })} rows={2} className={`${inputCls} mt-1.5 resize-none py-3`} placeholder="Kartlarda göstəriləcək 1–2 cümlə" />
         </label>
+      </section>
 
-        <label className="mt-4 block">
-          <span className="text-sm font-medium">Mətn</span>
-          <textarea value={n.body} onChange={(e) => patch({ body: e.target.value })} rows={10} className={`${inputCls} mt-1.5 py-3`} placeholder="Xəbərin tam mətni" />
-          <span className="mt-1 block text-xs text-muted">Abzasları boş sətirlə ayırın.</span>
-        </label>
+      {/* Kateqoriyaya xas sahələr */}
+      {fields.length > 0 && (
+        <section className="rounded-2xl bg-white p-4 ring-1 ring-line sm:p-5">
+          <h2 className="flex items-center gap-2 font-semibold">
+            <Icon name={n.category === "Elan" ? "megaphone" : "calendar"} className="size-5 text-brand-700" />
+            {n.category} məlumatları
+          </h2>
+          <p className="mt-1 text-xs text-muted">Xəbər səhifəsində ayrıca məlumat kartı kimi göstərilir. Hamısı istəyə bağlıdır.</p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {fields.includes("startsAt") && dateField("startsAt")}
+            {fields.includes("endsAt") && dateField("endsAt")}
+            {fields.includes("deadline") && dateField("deadline")}
+            {fields.includes("location") && textField("location", "Məs.: Əsas bina, 3-cü mərtəbə, akt zalı")}
+            {fields.includes("format") && (
+              <fieldset>
+                <legend className="text-sm font-medium">{META_LABELS.format}</legend>
+                <div className="mt-1.5 flex gap-2">
+                  {EVENT_FORMATS.map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      aria-pressed={n.meta.format === f}
+                      onClick={() => patchMeta({ format: n.meta.format === f ? undefined : f })}
+                      className={`h-12 flex-1 rounded-xl text-sm font-medium transition ${n.meta.format === f ? "bg-brand-700 text-white" : "bg-white text-slate-600 ring-1 ring-line hover:bg-slate-50"}`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+            {fields.includes("contact") && textField("contact", "Məs.: elmi katib, daxili 1234")}
+            {fields.includes("registrationUrl") && textField("registrationUrl", "https://...", true)}
+            {fields.includes("onlineUrl") && (n.meta.format !== "Əyani" || n.category === "Tədbir") && textField("onlineUrl", "https://... (Zoom, Teams və s.)", true)}
+          </div>
+        </section>
+      )}
+
+      <section className="rounded-2xl bg-white p-4 ring-1 ring-line sm:p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-semibold">Mətn</h2>
+          {template && (
+            <button
+              type="button"
+              onClick={applyTemplate}
+              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-brand-50 px-3 text-sm font-medium text-brand-700 hover:bg-brand-100"
+            >
+              <Icon name="template" className="size-4" /> {n.category} şablonu
+            </button>
+          )}
+        </div>
+        <RichTextEditor value={n.body} onChange={(body) => patch({ body })} resetKey={resetKey} />
       </section>
 
       <section className="rounded-2xl bg-white p-4 ring-1 ring-line sm:p-5">

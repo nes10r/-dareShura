@@ -6,9 +6,12 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { CategoryChip, NewsCard } from "@/components/news/NewsCard";
 import { NewsCover } from "@/components/news/NewsCover";
+import { NewsInfoCard } from "@/components/news/NewsInfoCard";
 import { getSessionUser } from "@/lib/auth";
 import { getPublishedNewsBySlug, listPublishedNews } from "@/lib/db/repo";
 import { formatDate } from "@/lib/format";
+import { bodyToHtml } from "@/lib/news-content";
+import { sanitizeNewsHtml } from "@/lib/news-sanitize";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const item = await getPublishedNewsBySlug((await params).slug);
@@ -44,15 +47,13 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
             </div>
           )}
 
-          <div className="mt-8 space-y-5 text-[17px] leading-relaxed text-slate-700">
-            {item.body
-              .split(/\n{2,}/)
-              .map((p) => p.trim())
-              .filter(Boolean)
-              .map((p, i) => (
-                <p key={i} className="whitespace-pre-line">{p}</p>
-              ))}
-          </div>
+          <NewsInfoCard item={item} />
+
+          {/* Saxlanarkən təmizlənib; göstərərkən də yenidən təmizlənir (köhnə və ya bazaya birbaşa yazılmış məzmun üçün) */}
+          <div
+            className="rich-text mt-8 text-[17px] leading-relaxed text-slate-700"
+            dangerouslySetInnerHTML={{ __html: sanitizeNewsHtml(bodyToHtml(item.body)) }}
+          />
         </article>
 
         {others.length > 0 && (

@@ -5,7 +5,9 @@ import { redirect } from "next/navigation";
 import { requirePermission } from "@/lib/auth";
 import { deleteNews, getNews, insertNews, newId, updateNews } from "@/lib/db/repo";
 import { slugify } from "@/lib/format";
-import { NEWS_CATEGORIES, type NewsCategory, type NewsItem } from "@/lib/types";
+import { htmlToText } from "@/lib/news-content";
+import { sanitizeNewsHtml, sanitizeNewsMeta } from "@/lib/news-sanitize";
+import { NEWS_CATEGORIES, type NewsCategory, type NewsItem, type NewsMeta } from "@/lib/types";
 
 export interface NewsInput {
   title: string;
@@ -13,6 +15,7 @@ export interface NewsInput {
   body: string;
   category: NewsCategory;
   coverImage: string | null;
+  meta: NewsMeta;
   publish: boolean;
 }
 
@@ -28,15 +31,20 @@ function cleanCover(v: string | null) {
 
 export async function saveNews(id: string | null, raw: NewsInput): Promise<NewsSaveResult> {
   const user = await requirePermission("news.manage");
+  const category: NewsCategory = NEWS_CATEGORIES.includes(raw.category) ? raw.category : "Xəbər";
+  // Redaktorun HTML-i yalnız icazəli teqlərlə saxlanılır; boş redaktor ("<p></p>") boş mətn sayılır
+  const html = sanitizeNewsHtml(String(raw.body ?? "").slice(0, 200_000));
+  const { meta, errors: metaErrors } = sanitizeNewsMeta(category, raw.meta);
   const input = {
     title: String(raw.title ?? "").trim().slice(0, 300),
     summary: String(raw.summary ?? "").trim().slice(0, 600),
-    body: String(raw.body ?? "").trim().slice(0, 20000),
-    category: NEWS_CATEGORIES.includes(raw.category) ? raw.category : "Xəbər",
+    body: htmlToText(html) ? html : "",
+    category,
     coverImage: cleanCover(raw.coverImage),
+    meta,
   };
 
-  const errors: string[] = [];
+  const errors: string[] = [...metaErrors];
   if (!input.title) errors.push("Başlığı daxil edin.");
   if (raw.publish && !input.body && !input.summary) errors.push("Dərc etmək üçün mətn və ya qısa məzmun lazımdır.");
   if (raw.coverImage?.trim() && !input.coverImage) errors.push("Şəkil linki https:// ilə başlamalıdır.");
