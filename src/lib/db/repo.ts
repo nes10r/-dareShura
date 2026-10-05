@@ -1,9 +1,9 @@
 import { randomBytes } from "node:crypto";
 import { and, asc, count, desc, eq, gt, isNull, lte } from "drizzle-orm";
 import { facultyList } from "../faculties";
-import type { AnswerValue, Invite, NewsItem, Survey, SurveyResponse, User } from "../types";
+import type { AnswerValue, Conference, ConferenceOverrides, Invite, NewsItem, Survey, SurveyResponse, User } from "../types";
 import { db } from "./client";
-import { invites, news, surveyResponses, surveys, userAvatars, users } from "./schema";
+import { appState, conferences, invites, news, surveyResponses, surveys, userAvatars, users } from "./schema";
 
 /**
  * Verilənlər bazası ilə bütün iş bu qatdan keçir.
@@ -303,4 +303,80 @@ export async function removeAvatar(userId: string) {
 export async function getAvatar(userId: string) {
   const [row] = await db.select().from(userAvatars).where(eq(userAvatars.userId, userId)).limit(1);
   return row ?? null;
+}
+
+// ---------- Konfranslar ----------
+
+type ConferenceRow = typeof conferences.$inferSelect;
+
+/** Avtomatik çıxarılan dəyərlər + adminin düzəlişləri = effektiv dəyərlər */
+const toConference = (r: ConferenceRow): Conference => {
+  const o = r.overrides ?? {};
+  const auto: Required<ConferenceOverrides> = {
+    startsAt: iso(r.startsAt),
+    endsAt: iso(r.endsAt),
+    deadline: iso(r.deadline),
+    format: r.format ?? null,
+    location: r.location,
+    fee: r.fee ?? null,
+    feeNote: r.feeNote,
+  };
+  const pick = <K extends keyof ConferenceOverrides>(k: K, auto: Conference[K]) => (k in o ? (o[k] as Conference[K]) : auto);
+  return {
+    id: r.id,
+    sourceUrl: r.sourceUrl,
+    title: r.title,
+    summary: r.summary,
+    bodyHtml: r.bodyHtml,
+    image: r.image,
+    publishedAt: r.publishedAt.toISOString(),
+    startsAt: pick("startsAt", iso(r.startsAt)),
+    endsAt: pick("endsAt", iso(r.endsAt)),
+    deadline: pick("deadline", iso(r.deadline)),
+    deadlines: r.deadlines ?? [],
+    format: pick("format", r.format ?? null),
+    location: pick("location", r.location),
+    fee: pick("fee", r.fee ?? null),
+    feeNote: pick("feeNote", r.feeNote),
+    overrides: o,
+    auto,
+    hidden: r.hidden,
+    fetchedAt: r.fetchedAt.toISOString(),
+  };
+};
+
+export async function listConferences({ includeHidden = false } = {}) {
+  const rows = await db.select().from(conferences).orderBy(desc(conferences.publishedAt));
+  return rows.map(toConference).filter((c) => includeHidden || !c.hidden);
+}
+
+export async function getConference(id: string) {
+  const [row] = await db.select().from(conferences).where(eq(conferences.id, id)).limit(1);
+  return row ? toConference(row) : null;
+}
+
+export async function listConferenceIds() {
+  return new Set((await db.select({ id: conferences.id }).from(conferences)).map((r) => r.id));
+}
+
+export type ConferenceUpsert = Omit<typeof conferences.$inferInsert, "overrides" | "hidden">;
+
+/** Mənbədən gələn məlumatı yazır; adminin düzəlişlərinə (overrides, hidden) toxunmur. */
+export async function upsertConference(c: ConferenceUpsert) {
+  const { id, ...rest } = c;
+  await db.insert(conferences).values(c).onConflictDoUpdate({ target: conferences.id, set: rest });
+}
+
+export async function setConferenceOverrides(id: string, overrides: ConferenceOverrides, hidden: boolean) {
+  await db.update(conferences).set({ overrides, hidden }).where(eq(conferences.id, id));
+}
+
+export async function getState<T>(key: string): Promise<T | null> {
+  const [row] = await db.select().from(appState).where(eq(appState.key, key)).limit(1);
+  return row ? (row.value as T) : null;
+}
+
+export async function setState(key: string, value: unknown) {
+  const now = new Date();
+  await db.insert(appState).values({ key, value, updatedAt: now }).onConflictDoUpdate({ target: appState.key, set: { value, updatedAt: now } });
 }

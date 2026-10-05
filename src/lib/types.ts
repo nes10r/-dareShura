@@ -143,3 +143,43 @@ export const NEWS_COVER_PRESETS = [
   { src: "/images/campus-courtyard.jpg", label: "Həyət" },
   { src: "/images/unec-logo.jpg", label: "Loqo" },
 ] as const;
+
+// ---------- Konfranslar ----------
+
+export type ConferenceFormat = "Əyani" | "Onlayn" | "Hibrid";
+export type ConferenceFee = "free" | "paid";
+
+/** Adminin əl ilə təyin etdiyi sahələr — avtomatik çıxarılan dəyərləri üstələyir */
+export interface ConferenceOverrides {
+  startsAt?: string | null;
+  endsAt?: string | null;
+  deadline?: string | null;
+  format?: ConferenceFormat | null;
+  location?: string | null;
+  fee?: ConferenceFee | null;
+  feeNote?: string | null;
+}
+
+export interface Conference {
+  id: string;
+  sourceUrl: string;
+  title: string;
+  summary: string;
+  bodyHtml: string;
+  image: string | null;
+  publishedAt: string;
+  /** Effektiv dəyərlər (avtomatik + adminin düzəlişləri) */
+  startsAt: string | null;
+  endsAt: string | null;
+  deadline: string | null;
+  deadlines: { date: string; label: string }[];
+  format: ConferenceFormat | null;
+  location: string | null;
+  fee: ConferenceFee | null;
+  feeNote: string | null;
+  overrides: ConferenceOverrides;
+  /** Mənbədən avtomatik çıxarılan dəyərlər (admin redaktorunda müqayisə üçün) */
+  auto: Required<ConferenceOverrides>;
+  hidden: boolean;
+  fetchedAt: string;
+}

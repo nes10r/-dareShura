@@ -38,6 +38,15 @@ Superadmin şifrəsi `SUPERADMIN_PASSWORD` mühit dəyişənindən götürülür
 - Xəbərlər `news` cədvəlində saxlanılır; superadmin/admin `İdarəetmə → Xəbərlərin idarə edilməsi` bölməsindən yazır, dərc edir, silir.
 - İctimai səhifələr: `/xeberler` (kateqoriya filtri ilə) və `/xeberler/[slug]`.
 
+## Konfranslar
+
+- Mənbə: [news.unec.edu.az/elan/86-konfrans](https://news.unec.edu.az/elan/86-konfrans). Yeni elanlar `/konfranslar` açılanda
+  (son yoxlamadan 6 saat keçibsə) fonda və ya **İdarəetmə → Konfranslar → Yeni elanları yoxla** ilə çəkilir.
+- Keçirilmə tarixi, son müraciət tarixi, format (Əyani/Onlayn/Hibrid), məkan və ödəniş elan mətnindən avtomatik müəyyən edilir
+  (`src/lib/conferences/extract.ts`). Mətndə yoxdursa və ya səhvdirsə, admin əl ilə düzəldir — düzəlişlər `overrides`-da saxlanılır,
+  yenilənmədə silinmir.
+- Kartlarda son müraciət tarixi canlı geri sayımla göstərilir; təqvim faylı `/konfranslar/[id]/ics`.
+
 ## Dynamic Module Architecture
 
 Naviqasiya və dashboard statik deyil — hər sorğuda modul provider-lərindən generasiya olunur.

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ConferencesCard } from "@/components/dashboard/ConferencesCard";
 import { SurveyCard } from "@/components/dashboard/SurveyCard";
 import { SurveyPrompt } from "@/components/dashboard/SurveyPrompt";
 import { Icon } from "@/components/Icon";
@@ -24,6 +25,8 @@ function renderCard(card: DashboardCard) {
   switch (card.kind) {
     case "survey":
       return <SurveyCard key={card.key} data={card.data} />;
+    case "conferences":
+      return <ConferencesCard key={card.key} data={card.data} />;
   }
 }
 

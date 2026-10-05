@@ -13,6 +13,7 @@ export function SiteFooter() {
           <p className="text-sm font-semibold">Bölmələr</p>
           <ul className="mt-3 space-y-2 text-sm text-white/70">
             <li><Link href="/xeberler" className="hover:text-white">Xəbərlər və elanlar</Link></li>
+            <li><Link href="/konfranslar" className="hover:text-white">Konfranslar</Link></li>
             <li><Link href="/#haqqimizda" className="hover:text-white">Haqqımızda</Link></li>
             <li><Link href="/login" className="hover:text-white">Üzv kabineti</Link></li>
           </ul>

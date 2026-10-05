@@ -1,5 +1,5 @@
 import { boolean, index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import type { AnswerValue, Audience, NewsCategory, NewsMeta, Question, ResultsVisibility, Role, SurveyStatus } from "../types";
+import type { AnswerValue, Audience, ConferenceFee, ConferenceFormat, ConferenceOverrides, NewsCategory, NewsMeta, Question, ResultsVisibility, Role, SurveyStatus } from "../types";
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 
@@ -99,3 +99,40 @@ export const invites = pgTable(
   },
   (t) => [index("invites_expires_idx").on(t.expiresAt)],
 );
+
+/**
+ * news.unec.edu.az/elan/86-konfrans bölməsindən çəkilən konfrans elanları.
+ * Avtomatik çıxarılan sahələr ayrıca, adminin əl ilə düzəlişləri `overrides`-da saxlanılır
+ * (yenidən sinxronizasiya düzəlişləri silmir).
+ */
+export const conferences = pgTable(
+  "conferences",
+  {
+    id: text("id").primaryKey(),
+    sourceUrl: text("source_url").notNull().unique(),
+    title: text("title").notNull(),
+    summary: text("summary").notNull().default(""),
+    bodyHtml: text("body_html").notNull().default(""),
+    image: text("image"),
+    publishedAt: ts("published_at").notNull(),
+    startsAt: ts("starts_at"),
+    endsAt: ts("ends_at"),
+    deadline: ts("deadline"),
+    deadlines: jsonb("deadlines").$type<{ date: string; label: string }[]>().notNull().default([]),
+    format: text("format").$type<ConferenceFormat>(),
+    location: text("location"),
+    fee: text("fee").$type<ConferenceFee>(),
+    feeNote: text("fee_note"),
+    overrides: jsonb("overrides").$type<ConferenceOverrides>().notNull().default({}),
+    hidden: boolean("hidden").notNull().default(false),
+    fetchedAt: ts("fetched_at").notNull().defaultNow(),
+  },
+  (t) => [index("conferences_starts_idx").on(t.startsAt), index("conferences_published_idx").on(t.publishedAt)],
+);
+
+/** Kiçik açar-dəyər anbarı (məs. son sinxronizasiya vaxtı) */
+export const appState = pgTable("app_state", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").notNull(),
+  updatedAt: ts("updated_at").notNull().defaultNow(),
+});

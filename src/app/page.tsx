@@ -1,15 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
+import { ConferenceCard } from "@/components/conferences/ConferenceCard";
 import { HeroVideo } from "@/components/landing/HeroVideo";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { FeaturedNewsCard, NewsCard } from "@/components/news/NewsCard";
 import { getSessionUser } from "@/lib/auth";
-import { listPublishedNews } from "@/lib/db/repo";
+import { compareCurrent, isCurrent } from "@/lib/conferences/view";
+import { listConferences, listPublishedNews } from "@/lib/db/repo";
 
 export default async function LandingPage() {
-  const [user, news] = await Promise.all([getSessionUser(), listPublishedNews(4)]);
+  const [user, news, confs] = await Promise.all([getSessionUser(), listPublishedNews(4), listConferences()]);
+  const upcoming = confs.filter((c) => isCurrent(c)).sort(compareCurrent).slice(0, 3);
   const cta = user ? { href: "/dashboard", label: "Kabinet" } : { href: "/login", label: "Daxil ol" };
   const [featured, ...rest] = news;
 
@@ -88,8 +91,32 @@ export default async function LandingPage() {
           </div>
         </section>
 
+        {/* Konfranslar */}
+        {upcoming.length > 0 && (
+          <section id="konfranslar" className="scroll-mt-16">
+            <div className="mx-auto max-w-6xl px-4 py-14 sm:py-20">
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wider text-brand-600">Elmi imkanlar</p>
+                  <h2 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">Yaxınlaşan konfranslar</h2>
+                  <p className="mt-2 max-w-xl text-muted">Müraciət son tarixləri, format və iştirak şərtləri — vaxtında müraciət etmək üçün.</p>
+                </div>
+                <Link href="/konfranslar" className="hidden h-11 shrink-0 items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold ring-1 ring-line hover:ring-brand-200 sm:inline-flex">
+                  Bütün konfranslar <Icon name="arrow-right" className="size-4" />
+                </Link>
+              </div>
+              <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {upcoming.map((c) => <ConferenceCard key={c.id} c={c} />)}
+              </div>
+              <Link href="/konfranslar" className="mt-6 flex h-12 items-center justify-center gap-1.5 rounded-xl bg-white font-semibold ring-1 ring-line sm:hidden">
+                Bütün konfranslar <Icon name="arrow-right" className="size-4" />
+              </Link>
+            </div>
+          </section>
+        )}
+
         {/* Haqqımızda */}
-        <section id="haqqimizda" className="scroll-mt-16">
+        <section id="haqqimizda" className="scroll-mt-16 bg-surface">
           <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:py-20 lg:grid-cols-2 lg:gap-16">
             <div className="relative order-2 lg:order-1">
               <div className="relative aspect-[589/521] overflow-hidden rounded-3xl shadow-2xl shadow-brand-900/15">

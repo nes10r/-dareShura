@@ -43,6 +43,13 @@
       "when": 1791140026868,
       "tag": "0005_survey_anonymous",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791228780175,
+      "tag": "0006_conferences",
+      "breakpoints": true
     }
   ]
 }

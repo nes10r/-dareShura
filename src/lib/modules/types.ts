@@ -40,7 +40,14 @@ export interface NavEntry extends NavLink {
 
 /** Dashboard kartı — `kind` uyğun React komponentini seçir. */
 export type DashboardCard =
-  | { kind: "survey"; key: string; priority: number; data: SurveyCardData };
+  | { kind: "survey"; key: string; priority: number; data: SurveyCardData }
+  | { kind: "conferences"; key: string; priority: number; data: ConferencesCardData };
+
+export interface ConferencesCardData {
+  /** Müraciəti açıq olan aktual konfransların sayı */
+  openCount: number;
+  items: { id: string; title: string; deadline: string | null; startsAt: string | null; endsAt: string | null; format: string | null; location: string | null }[];
+}
 
 export interface SurveyCardData {
   id: string;

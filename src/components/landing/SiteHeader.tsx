@@ -30,6 +30,7 @@ export function SiteHeader({ cta, overlay = false }: { cta: { href: string; labe
         <Logo light={!solid} />
         <nav className="flex items-center gap-1 sm:gap-2">
           <Link href="/xeberler" className={link}>Xəbərlər</Link>
+          <Link href="/konfranslar" className={link}>Konfranslar</Link>
           <Link href="/#haqqimizda" className={link}>Haqqımızda</Link>
           <Link
             href={cta.href}
