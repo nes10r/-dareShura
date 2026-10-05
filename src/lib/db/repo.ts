@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { and, asc, count, desc, eq, gt, isNull, lte } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, isNull, lte } from "drizzle-orm";
 import { facultyList } from "../faculties";
 import type { AnswerValue, Conference, ConferenceOverrides, Invite, NewsItem, Survey, SurveyResponse, User } from "../types";
 import { db } from "./client";
@@ -379,4 +379,9 @@ export async function getState<T>(key: string): Promise<T | null> {
 export async function setState(key: string, value: unknown) {
   const now = new Date();
   await db.insert(appState).values({ key, value, updatedAt: now }).onConflictDoUpdate({ target: appState.key, set: { value, updatedAt: now } });
+}
+
+export async function deleteConferences(ids: string[]) {
+  if (!ids.length) return;
+  await db.delete(conferences).where(inArray(conferences.id, ids));
 }

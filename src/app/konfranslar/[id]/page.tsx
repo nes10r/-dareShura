@@ -25,9 +25,14 @@ const BAND = {
   none: "from-brand-700 to-brand-900",
 } as const;
 
+/** "15–16 oktyabr 2026", "30 sentyabr – 2 oktyabr 2026" */
 function dateRange(start: string, end: string | null) {
-  if (!end || formatDate(start) === formatDate(end)) return formatDate(start);
-  return `${formatDate(start)} – ${formatDate(end)}`;
+  const a = formatDate(start);
+  if (!end || a === formatDate(end)) return a;
+  const [d1, m1, y1] = a.split(" ");
+  const [d2, m2, y2] = formatDate(end).split(" ");
+  if (y1 !== y2) return `${a} – ${formatDate(end)}`;
+  return m1 === m2 ? `${d1}–${d2} ${m2} ${y2}` : `${d1} ${m1} – ${d2} ${m2} ${y2}`;
 }
 
 export default async function ConferencePage({ params }: { params: Promise<{ id: string }> }) {

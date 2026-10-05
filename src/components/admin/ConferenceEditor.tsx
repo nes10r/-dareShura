@@ -155,7 +155,7 @@ export function SyncButton() {
       const res = await runConferenceSync(force);
       if ("error" in res) setMsg(res.error);
       else {
-        const parts = [`${res.added} yeni`, force ? `${res.updated} yeniləndi` : null, res.remaining ? `${res.remaining} növbəti dəfəyə qaldı` : null];
+        const parts = [`${res.added} yeni`, force ? `${res.updated} yeniləndi` : null, res.remaining ? `${res.remaining} növbəti dəfəyə qaldı` : null, res.pruned ? `${res.pruned} köhnə silindi` : null];
         setMsg(`Hazırdır: ${parts.filter(Boolean).join(", ")}.${res.errors.length ? ` Xəta: ${res.errors.length}` : ""}`);
         router.refresh();
       }

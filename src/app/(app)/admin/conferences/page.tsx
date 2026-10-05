@@ -37,7 +37,7 @@ export default async function AdminConferencesPage() {
       <div className="mt-5 rounded-2xl bg-white p-4 ring-1 ring-line">
         <SyncButton />
         <p className="mt-3 text-xs text-muted">
-          Sayt 6 saatdan bir avtomatik yenilənir. Tarix, format və ödəniş elan mətnindən avtomatik müəyyən edilir; səhv olarsa, aşağıda düzəldin —
+          Sayt 6 saatdan bir avtomatik yenilənir. Vaxtı bitmiş konfranslardan yalnız son 5-i saxlanılır. Tarix, format və ödəniş elan mətnindən avtomatik müəyyən edilir; səhv olarsa, aşağıda düzəldin —
           düzəlişləriniz yenilənmədə silinmir.
         </p>
       </div>
@@ -51,7 +51,7 @@ export default async function AdminConferencesPage() {
 
       {[
         { title: "Aktual", items: current },
-        { title: "Keçmiş", items: past },
+        { title: "Son keçirilənlər", items: past },
       ].map((group) => (
         <section key={group.title} className="mt-8">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted">

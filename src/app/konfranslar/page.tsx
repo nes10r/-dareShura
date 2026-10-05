@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 const TABS = [
   { key: "aktual", label: "Yaxınlaşan" },
   { key: "aciq", label: "Müraciət açıqdır" },
-  { key: "kecmis", label: "Keçmiş" },
+  { key: "kecmis", label: "Son keçirilənlər" },
 ] as const;
 const FORMATS: ConferenceFormat[] = ["Əyani", "Onlayn", "Hibrid"];
 

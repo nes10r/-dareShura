@@ -1,7 +1,8 @@
 import { decodeHTML } from "entities";
 import sanitizeHtml from "sanitize-html";
-import { getState, listConferenceIds, setState, upsertConference } from "../db/repo";
+import { deleteConferences, getState, listConferenceIds, listConferences, setState, upsertConference } from "../db/repo";
 import { extractConference } from "./extract";
+import { isCurrent } from "./view";
 
 /**
  * news.unec.edu.az → "Konfrans" bölməsinin elanlarını oxuyur və bazaya yazır.
@@ -20,6 +21,10 @@ const CONCURRENCY = 4;
 const MAX_AGE_DAYS = 365;
 
 const SYNC_KEY = "conferences.lastSync";
+/** Silinmiş (köhnəlmiş) elanların nömrələri — yenilənmədə yenidən əlavə olunmasın */
+const PRUNED_KEY = "conferences.pruned";
+/** Vaxtı bitmiş konfranslardan neçəsi saxlanılır (ən son keçirilənlər) */
+export const KEEP_PAST = 5;
 const LOCK_KEY = "conferences.syncLock";
 /** Avtomatik (səhifəyə daxil olanda) yenilənmə intervalı */
 export const AUTO_SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000;
@@ -130,6 +135,8 @@ export interface SyncResult {
   updated: number;
   /** Bu dəfə vaxt çatmadığı üçün növbəti yenilənməyə qalan elanlar */
   remaining?: number;
+  /** Silinən köhnə konfransların sayı */
+  pruned?: number;
   errors: string[];
 }
 
@@ -139,6 +146,7 @@ export interface SyncResult {
  */
 export async function syncConferences({ force = false, limit = MAX_NEW_ARTICLES } = {}): Promise<SyncResult> {
   const known = await listConferenceIds();
+  const pruned = new Set((await getState<string[]>(PRUNED_KEY)) ?? []);
   const cutoff = Date.now() - MAX_AGE_DAYS * 864e5;
   const result: SyncResult = { checked: 0, added: 0, updated: 0, remaining: 0, errors: [] };
   const queue: ListingItem[] = [];
@@ -152,10 +160,11 @@ export async function syncConferences({ force = false, limit = MAX_NEW_ARTICLES 
       break;
     }
     result.checked += items.length;
-    const fresh = items.filter((i) => i.publishedAt.getTime() >= cutoff);
+    const recent = items.filter((i) => i.publishedAt.getTime() >= cutoff);
+    const fresh = recent.filter((i) => !pruned.has(i.id));
     queue.push(...fresh.filter((i) => force || !known.has(i.id)));
-    // Səhifədə artıq hamısı məlumdursa və ya köhnədirsə, növbəti səhifəyə ehtiyac yoxdur
-    if (!items.length || fresh.length < items.length || (!force && fresh.every((i) => known.has(i.id)))) break;
+    // Səhifədə köhnə elan başlayıbsa və ya (adi yoxlamada) hamısı artıq məlumdursa, növbəti səhifəyə ehtiyac yoxdur
+    if (!items.length || recent.length < items.length || (!force && fresh.every((i) => known.has(i.id)))) break;
   }
 
   // Paralel, amma mənbəni yükləməmək üçün məhdud sayda
@@ -174,9 +183,29 @@ export async function syncConferences({ force = false, limit = MAX_NEW_ARTICLES 
     );
   }
   result.remaining = Math.max(0, queue.length - batch.length);
+  result.pruned = await pruneConferences();
 
   await setState(SYNC_KEY, { at: new Date().toISOString(), ...result });
   return result;
+}
+
+/**
+ * Vaxtı bitmiş konfranslardan yalnız ən son keçirilən KEEP_PAST qədərini saxlayır, qalanını silir.
+ * Silinənlərin nömrələri yadda saxlanılır ki, mənbədə hələ olsalar da yenidən çəkilməsinlər.
+ */
+export async function pruneConferences() {
+  const now = Date.now();
+  const past = (await listConferences({ includeHidden: true }))
+    .filter((c) => !isCurrent(c, now))
+    .sort((a, b) => Date.parse(b.endsAt ?? b.startsAt ?? b.publishedAt) - Date.parse(a.endsAt ?? a.startsAt ?? a.publishedAt));
+  const remove = past.slice(KEEP_PAST).map((c) => c.id);
+  if (!remove.length) return 0;
+
+  await deleteConferences(remove);
+  const pruned = (await getState<string[]>(PRUNED_KEY)) ?? [];
+  // Mənbə yalnız son ~1 ilin elanlarını göstərir — siyahı böyüməsin
+  await setState(PRUNED_KEY, [...new Set([...remove, ...pruned])].slice(0, 500));
+  return remove.length;
 }
 
 export async function getLastSync() {

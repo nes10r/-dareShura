@@ -20,7 +20,8 @@ export function Countdown({
   expired = "Müddət bitib",
 }: {
   target: string;
-  variant?: "inline" | "boxes";
+  /** inline: "9 gün 04 saat 12 dəq"; short: "9 gün" (son gündə hh:mm:ss); boxes: böyük bloklar */
+  variant?: "inline" | "short" | "boxes";
   fallback?: React.ReactNode;
   expired?: string;
 }) {
@@ -61,7 +62,7 @@ export function Countdown({
 
   return (
     <span className="tabular-nums" role="timer">
-      {d > 0 ? `${d} gün ${pad(h)} saat ${pad(m)} dəq` : `${pad(h)}:${pad(m)}:${pad(s)}`}
+      {d > 0 ? (variant === "short" ? `${d} gün` : `${d} gün ${pad(h)} saat ${pad(m)} dəq`) : `${pad(h)}:${pad(m)}:${pad(s)}`}
     </span>
   );
 }
