@@ -35,8 +35,26 @@ async function get(path: string) {
     signal: AbortSignal.timeout(15_000),
     cache: "no-store",
   });
-  if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
+  if (!res.ok) {
+    const blocked = res.status === 403 && (res.headers.get("server") ?? "").toLowerCase().includes("cloudflare");
+    throw new SourceError(
+      blocked
+        ? "news.unec.edu.az Cloudflare qoruması bu serverdən gələn sorğunu blokladı (HTTP 403)."
+        : `news.unec.edu.az cavab vermədi (HTTP ${res.status}).`,
+      blocked,
+    );
+  }
   return res.text();
+}
+
+/** Mənbəyə müraciət xətası; `blocked` — Cloudflare bot qoruması (server IP-si bloklanıb) */
+export class SourceError extends Error {
+  constructor(
+    message: string,
+    public blocked = false,
+  ) {
+    super(message);
+  }
 }
 
 const text = (html: string) =>
@@ -137,6 +155,8 @@ export interface SyncResult {
   remaining?: number;
   /** Silinən köhnə konfransların sayı */
   pruned?: number;
+  /** Mənbə bu serveri bloklayıb (Cloudflare) */
+  blocked?: boolean;
   errors: string[];
 }
 
@@ -156,7 +176,8 @@ export async function syncConferences({ force = false, limit = MAX_NEW_ARTICLES 
     try {
       items = parseListing(await get(`${CATEGORY_PATH}?start=${page * 10}`));
     } catch (e) {
-      result.errors.push(String(e));
+      result.errors.push(e instanceof Error ? e.message : String(e));
+      result.blocked = e instanceof SourceError && e.blocked;
       break;
     }
     result.checked += items.length;

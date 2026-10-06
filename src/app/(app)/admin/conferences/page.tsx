@@ -42,6 +42,24 @@ export default async function AdminConferencesPage() {
         </p>
       </div>
 
+      {last && last.errors?.length > 0 && (
+        <div role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-900 ring-1 ring-red-200">
+          <p className="flex items-start gap-2 font-semibold">
+            <Icon name="bell" className="mt-0.5 size-4 shrink-0" /> Son yenilənmə alınmadı ({formatDateTime(last.at)})
+          </p>
+          <p className="mt-1">{last.errors[0]}</p>
+          {last.blocked && (
+            <p className="mt-2 text-red-800">
+              Bu, UNEC saytının bot qorumasıdır: Azərbaycandan gələn sorğular keçir, xaricdəki serverlərdən (Vercel) gələnlər bloklanır. Daimi
+              həll — UNEC İT şöbəsindən Cloudflare-də <code className="rounded bg-white/70 px-1">UNEC-GAS-Platforma</code> User-Agent-li
+              sorğulara icazə verməsini xahiş etmək. O vaxta qədər elanları Azərbaycandakı kompüterdən{" "}
+              <code className="rounded bg-white/70 px-1">npm run konfrans:sync</code> ilə yeniləmək olar. Mövcud konfranslar saytda görünməyə
+              davam edir.
+            </p>
+          )}
+        </div>
+      )}
+
       {missing > 0 && (
         <p className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
           <Icon name="bell" className="mt-0.5 size-4 shrink-0" />

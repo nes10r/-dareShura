@@ -10,7 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "konfrans:sync": "tsx scripts/sync-conferences.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.5.8",

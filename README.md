@@ -46,6 +46,9 @@ Superadmin şifrəsi `SUPERADMIN_PASSWORD` mühit dəyişənindən götürülür
   (`src/lib/conferences/extract.ts`). Mətndə yoxdursa və ya səhvdirsə, admin əl ilə düzəldir — düzəlişlər `overrides`-da saxlanılır,
   yenilənmədə silinmir.
 - Kartlarda son müraciət tarixi canlı geri sayımla göstərilir; təqvim faylı `/konfranslar/[id]/ics`.
+- **Məhdudiyyət:** news.unec.edu.az Cloudflare ilə xaricdəki serverlərdən (Vercel) gələn sorğuları bloklayır (HTTP 403).
+  Daimi həll — UNEC İT-dən `UNEC-GAS-Platforma` User-Agent-inə icazə. O vaxta qədər Azərbaycandakı kompüterdən
+  `npm run konfrans:sync` (və ya Windows Task Scheduler ilə müntəzəm).
 
 ## Dynamic Module Architecture
 

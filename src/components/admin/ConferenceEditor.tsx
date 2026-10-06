@@ -156,7 +156,7 @@ export function SyncButton() {
       if ("error" in res) setMsg(res.error);
       else {
         const parts = [`${res.added} yeni`, force ? `${res.updated} yeniləndi` : null, res.remaining ? `${res.remaining} növbəti dəfəyə qaldı` : null, res.pruned ? `${res.pruned} köhnə silindi` : null];
-        setMsg(`Hazırdır: ${parts.filter(Boolean).join(", ")}.${res.errors.length ? ` Xəta: ${res.errors.length}` : ""}`);
+        setMsg(res.errors.length ? `Xəta: ${res.errors[0]}` : `Hazırdır: ${parts.filter(Boolean).join(", ")}.`);
         router.refresh();
       }
     });
