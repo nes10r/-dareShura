@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { getSessionUser } from "@/lib/auth";
 import { syncIfStale } from "@/lib/conferences/source";
-import { compareCurrent, deadlineState, isCurrent } from "@/lib/conferences/view";
+import { compareCurrent, deadlineState, FORMAT_STYLES, isCurrent } from "@/lib/conferences/view";
 import { listConferences } from "@/lib/db/repo";
 import type { ConferenceFormat } from "@/lib/types";
 
@@ -20,8 +20,8 @@ export const metadata: Metadata = {
 
 const TABS = [
   { key: "aktual", label: "Yaxınlaşan" },
-  { key: "aciq", label: "Müraciət açıqdır" },
-  { key: "kecmis", label: "Son keçirilənlər" },
+  { key: "aciq", label: "Müraciət açıq" },
+  { key: "kecmis", label: "Keçirilənlər" },
 ] as const;
 const FORMATS: ConferenceFormat[] = ["Əyani", "Onlayn", "Hibrid"];
 
@@ -64,38 +64,46 @@ export default async function ConferencesPage({ searchParams }: { searchParams: 
           saytından avtomatik yenilənir.
         </p>
 
-        <nav className="-mx-4 mt-6 overflow-x-auto px-4" aria-label="Filtrlər">
-          <ul className="flex w-max items-center gap-2">
-            {TABS.map((t) => (
-              <li key={t.key}>
+        {/* Filtrlər: mobildə yana sürüşmür — ekrana tam sığan bərabər hissəli seçimlər */}
+        <div className="mt-6 space-y-2 sm:flex sm:items-center sm:gap-3 sm:space-y-0">
+          <nav aria-label="Konfrans statusu" className="grid grid-cols-3 gap-1 rounded-2xl bg-white p-1 ring-1 ring-line sm:inline-grid sm:w-auto">
+            {TABS.map((t) => {
+              const active = tab === t.key;
+              return (
                 <Link
+                  key={t.key}
                   href={href({ tab: t.key })}
-                  aria-current={tab === t.key ? "page" : undefined}
-                  className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-medium transition ${
-                    tab === t.key ? "bg-ink text-white" : "bg-white text-slate-600 ring-1 ring-line hover:bg-slate-50"
+                  aria-current={active ? "page" : undefined}
+                  className={`flex min-h-11 flex-col items-center justify-center rounded-xl px-2 py-1.5 text-center transition sm:flex-row sm:gap-2 sm:px-4 ${
+                    active ? "bg-ink text-white shadow-sm" : "text-slate-600 hover:bg-slate-50"
                   }`}
                 >
-                  {t.label}
-                  <span className={`text-xs ${tab === t.key ? "text-white/70" : "text-muted"}`}>{byTab[t.key].length}</span>
+                  <span className="text-[13px] font-semibold leading-tight sm:text-sm">{t.label}</span>
+                  <span className={`text-[11px] leading-tight sm:text-xs ${active ? "text-white/70" : "text-muted"}`}>{byTab[t.key].length}</span>
                 </Link>
-              </li>
-            ))}
-            <li aria-hidden="true" className="mx-1 h-6 w-px bg-line" />
-            {FORMATS.map((f) => (
-              <li key={f}>
+              );
+            })}
+          </nav>
+
+          <nav aria-label="Format" className="grid grid-cols-4 gap-1 rounded-2xl bg-white p-1 ring-1 ring-line sm:inline-grid sm:w-auto">
+            {[null, ...FORMATS].map((f) => {
+              const active = format === f;
+              return (
                 <Link
-                  href={href({ format: format === f ? null : f })}
-                  aria-pressed={format === f}
-                  className={`inline-flex h-10 items-center rounded-full px-4 text-sm font-medium transition ${
-                    format === f ? "bg-brand-700 text-white" : "bg-white text-slate-600 ring-1 ring-line hover:bg-slate-50"
+                  key={f ?? "all"}
+                  href={href({ format: f })}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-2 text-[13px] font-medium transition sm:px-4 sm:text-sm ${
+                    active ? "bg-brand-700 text-white shadow-sm" : "text-slate-600 hover:bg-slate-50"
                   }`}
                 >
-                  {f}
+                  {f && <span className={`size-1.5 rounded-full ${active ? "bg-white" : FORMAT_STYLES[f].dot}`} />}
+                  {f ?? "Hamısı"}
                 </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+              );
+            })}
+          </nav>
+        </div>
 
         {items.length ? (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
