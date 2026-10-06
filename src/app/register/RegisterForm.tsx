@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { FacultyInput } from "@/components/ui/FacultyInput";
+import { TagInput } from "@/components/ui/TagInput";
 import { ACADEMIC_TITLES } from "@/lib/validation";
 import { register, type RegisterState } from "./actions";
 
@@ -23,7 +24,7 @@ function Field({ label, error, hint, children }: { label: string; error?: string
   );
 }
 
-export function RegisterForm({ token, faculties }: { token: string; faculties: string[] }) {
+export function RegisterForm({ token, faculties, skills }: { token: string; faculties: string[]; skills: string[] }) {
   const [state, action, pending] = useActionState<RegisterState, FormData>(register, {});
   const [showPassword, setShowPassword] = useState(false);
   const e = state.errors ?? {};
@@ -67,6 +68,12 @@ export function RegisterForm({ token, faculties }: { token: string; faculties: s
             {ACADEMIC_TITLES.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </Field>
+      </div>
+
+      <div>
+        <span className="text-sm font-medium">Elmi maraq və bacarıqlar (istəyə bağlı)</span>
+        <p className="mb-1.5 text-xs text-muted">Uyğun qrant layihələri üçün sizə dəvət göndəriləcək.</p>
+        <TagInput name="skills" suggestions={skills} placeholder="Məs.: Maliyyə, Süni intellekt" />
       </div>
 
       <Field label="Şifrə" error={e.password} hint="Ən azı 8 simvol, hərf və rəqəm">

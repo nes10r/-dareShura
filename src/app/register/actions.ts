@@ -10,6 +10,15 @@ export type RegisterState = {
   inviteInvalid?: boolean;
 };
 
+function parseTags(raw: string) {
+  try {
+    const v = JSON.parse(raw || "[]");
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function register(_prev: RegisterState, formData: FormData): Promise<RegisterState> {
   const get = (k: string) => String(formData.get(k) ?? "");
   const input = {
@@ -21,11 +30,12 @@ export async function register(_prev: RegisterState, formData: FormData): Promis
     academicTitle: get("academicTitle"),
     password: get("password"),
     confirm: get("confirm"),
+    skills: parseTags(get("skills")),
   };
 
   const res = await registerUser(input);
   if (!res.ok) {
-    const { password: _p, confirm: _c, token: _t, ...values } = input;
+    const { password: _p, confirm: _c, token: _t, skills: _s, ...values } = input;
     return { errors: res.errors, values, inviteInvalid: res.inviteInvalid };
   }
 

@@ -1,5 +1,5 @@
-import { boolean, index, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import type { AnswerValue, Audience, ConferenceFee, ConferenceFormat, ConferenceOverrides, NewsCategory, NewsMeta, Question, ResultsVisibility, Role, SurveyStatus } from "../types";
+import { boolean, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import type { AnswerValue, Audience, ConferenceFee, ConferenceFormat, ConferenceOverrides, GrantDocument, GrantGroupMode, GrantGroupStatus, GrantInviteKind, GrantInviteStatus, GrantOverrides, GrantSource, NewsCategory, NewsMeta, Question, ResultsVisibility, Role, SurveyStatus } from "../types";
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 
@@ -16,6 +16,8 @@ export const users = pgTable("users", {
   inviteId: text("invite_id"),
   /** Profil şəklinin son yenilənmə vaxtı (null — şəkil yoxdur); URL-də keş versiyası kimi istifadə olunur */
   avatarUpdatedAt: ts("avatar_updated_at"),
+  /** Elmi maraq və bacarıqlar (teqlər) — qrant işçi qruplarına uyğun dəvət üçün */
+  skills: jsonb("skills").$type<string[]>().notNull().default([]),
   createdAt: ts("created_at").notNull().defaultNow(),
 });
 
@@ -136,3 +138,65 @@ export const appState = pgTable("app_state", {
   value: jsonb("value").notNull(),
   updatedAt: ts("updated_at").notNull().defaultNow(),
 });
+
+// ---------- Qrantlar ----------
+
+/** Qrant müsabiqələri: Elm Fondu (aef.gov.az), UNEC müsabiqə elanları və ya admin tərəfindən əl ilə */
+export const grants = pgTable(
+  "grants",
+  {
+    id: text("id").primaryKey(),
+    source: text("source").$type<GrantSource>().notNull(),
+    sourceUrl: text("source_url"),
+    title: text("title").notNull(),
+    summary: text("summary").notNull().default(""),
+    bodyHtml: text("body_html").notNull().default(""),
+    image: text("image"),
+    documents: jsonb("documents").$type<GrantDocument[]>().notNull().default([]),
+    publishedAt: ts("published_at").notNull(),
+    deadline: ts("deadline"),
+    amount: text("amount"),
+    /** Mövzu sahələri (teqlər) — işçi qrup yaradılarkən bacarıq kimi təklif olunur */
+    fields: jsonb("fields").$type<string[]>().notNull().default([]),
+    overrides: jsonb("overrides").$type<GrantOverrides>().notNull().default({}),
+    hidden: boolean("hidden").notNull().default(false),
+    fetchedAt: ts("fetched_at").notNull().defaultNow(),
+  },
+  (t) => [index("grants_published_idx").on(t.publishedAt)],
+);
+
+/** Qrant üçün işçi qrup: tələb olunan bacarıqlar üzrə üzvlərə dəvət göndərilir */
+export const grantGroups = pgTable(
+  "grant_groups",
+  {
+    id: text("id").primaryKey(),
+    grantId: text("grant_id").notNull().references(() => grants.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    requiredSkills: jsonb("required_skills").$type<string[]>().notNull().default([]),
+    targetSize: integer("target_size"),
+    respondBy: ts("respond_by"),
+    /** matched — bacarığı uyğun olanlara dəvət; open — uyğun tapılmadı, hamıya təklif */
+    mode: text("mode").$type<GrantGroupMode>().notNull(),
+    status: text("status").$type<GrantGroupStatus>().notNull().default("open"),
+    createdBy: text("created_by").notNull().references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("grant_groups_grant_idx").on(t.grantId)],
+);
+
+export const grantInvitations = pgTable(
+  "grant_invitations",
+  {
+    id: text("id").primaryKey(),
+    groupId: text("group_id").notNull().references(() => grantGroups.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    /** invite — bacarığa görə dəvət; offer — hamıya açıq təklif; request — üzv özü qoşulmaq istəyib */
+    kind: text("kind").$type<GrantInviteKind>().notNull(),
+    status: text("status").$type<GrantInviteStatus>().notNull().default("pending"),
+    matchedSkills: jsonb("matched_skills").$type<string[]>().notNull().default([]),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    respondedAt: ts("responded_at"),
+  },
+  (t) => [uniqueIndex("grant_invitations_group_user_uq").on(t.groupId, t.userId), index("grant_invitations_user_idx").on(t.userId, t.status)],
+);

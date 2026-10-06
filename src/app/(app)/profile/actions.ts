@@ -2,10 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser, verifyPassword } from "@/lib/auth";
-import { listFaculties, removeAvatar, setAvatar, updateUserPassword, updateUserProfile } from "@/lib/db/repo";
+import { listAllSkills, listFaculties, removeAvatar, setAvatar, updateUserPassword, updateUserProfile, updateUserSkills } from "@/lib/db/repo";
 import { canonicalFaculty, facultyProblem } from "@/lib/faculties";
 import { normalizePersonName } from "@/lib/names";
 import { hashPassword } from "@/lib/password";
+import { normalizeSkills } from "@/lib/skills";
 import { ACADEMIC_TITLES, passwordProblem } from "@/lib/validation";
 
 export type FormState = { ok?: boolean; error?: string };
@@ -79,6 +80,22 @@ export async function uploadAvatar(dataUrl: string): Promise<FormState> {
 export async function deleteAvatar(): Promise<FormState> {
   const user = await requireUser();
   await removeAvatar(user.id);
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+// ---------- Bacarıqlar ----------
+
+export async function saveSkills(_prev: FormState, formData: FormData): Promise<FormState> {
+  const user = await requireUser();
+  let raw: unknown;
+  try {
+    raw = JSON.parse(String(formData.get("skills") ?? "[]"));
+  } catch {
+    return { error: "Məlumat oxunmadı." };
+  }
+  const list = Array.isArray(raw) ? raw.filter((x): x is string => typeof x === "string") : [];
+  await updateUserSkills(user.id, normalizeSkills(list, await listAllSkills()));
   revalidatePath("/", "layout");
   return { ok: true };
 }

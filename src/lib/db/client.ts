@@ -14,7 +14,8 @@ export type Db = PgDatabase<PgQueryResultHKT, typeof schema>;
 function createDb(): Db {
   const url = process.env.DATABASE_URL;
   if (url) return drizzleNeon(neon(url), { schema }) as unknown as Db;
-  if (process.env.NODE_ENV === "production") {
+  // Canlı mühitdə səhvən lokal bazaya qoşulmamaq üçün; lokal production testi üçün ALLOW_PGLITE=1
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_PGLITE !== "1") {
     throw new Error("DATABASE_URL təyin edilməyib (Neon connection string).");
   }
   const client = new PGlite(process.env.PGLITE_DIR ?? "./data/pglite");

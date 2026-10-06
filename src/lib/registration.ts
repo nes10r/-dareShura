@@ -1,4 +1,5 @@
-import { findValidInvite, insertUser, listFaculties, newId } from "./db/repo";
+import { findValidInvite, insertUser, listAllSkills, listFaculties, newId } from "./db/repo";
+import { normalizeSkills } from "./skills";
 import { canonicalFaculty, facultyProblem } from "./faculties";
 import { normalizePersonName } from "./names";
 import { hashPassword } from "./password";
@@ -15,6 +16,7 @@ export interface RegisterInput {
   academicTitle: string;
   password: string;
   confirm: string;
+  skills?: string[];
 }
 
 export type RegisterResult = { ok: true; userId: string } | { ok: false; errors: Partial<Record<RegisterField, string>>; inviteInvalid?: boolean };
@@ -58,6 +60,7 @@ export async function registerUser(raw: RegisterInput): Promise<RegisterResult> 
     position: v.position,
     academicTitle: (ACADEMIC_TITLES as readonly string[]).includes(v.academicTitle) ? v.academicTitle : null,
     inviteId: invite.id,
+    skills: normalizeSkills(raw.skills ?? [], await listAllSkills()),
     createdAt: new Date().toISOString(),
   });
   if (!created) return { ok: false, errors: { email: "Bu e-poçt ilə artıq qeydiyyat mövcuddur. Daxil olun." } };

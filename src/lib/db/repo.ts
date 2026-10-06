@@ -1,9 +1,10 @@
 import { randomBytes } from "node:crypto";
 import { and, asc, count, desc, eq, gt, inArray, isNull, lte } from "drizzle-orm";
 import { facultyList } from "../faculties";
-import type { AnswerValue, Conference, ConferenceOverrides, Invite, NewsItem, Survey, SurveyResponse, User } from "../types";
+import { skillList } from "../skills";
+import type { AnswerValue, Conference, ConferenceOverrides, Grant, GrantGroup, GrantInvitation, GrantOverrides, Invite, NewsItem, Survey, SurveyResponse, User } from "../types";
 import { db } from "./client";
-import { appState, conferences, invites, news, surveyResponses, surveys, userAvatars, users } from "./schema";
+import { appState, conferences, grantGroups, grantInvitations, grants, invites, news, surveyResponses, surveys, userAvatars, users } from "./schema";
 
 /**
  * Verilənlər bazası ilə bütün iş bu qatdan keçir.
@@ -20,7 +21,7 @@ export function newId(prefix: string) {
 // ---------- Users ----------
 
 type UserRow = typeof users.$inferSelect;
-const toUser = (r: UserRow): User => ({ ...r, avatarUpdatedAt: iso(r.avatarUpdatedAt), createdAt: r.createdAt.toISOString() });
+const toUser = (r: UserRow): User => ({ ...r, skills: r.skills ?? [], avatarUpdatedAt: iso(r.avatarUpdatedAt), createdAt: r.createdAt.toISOString() });
 
 export async function findUserById(id: string) {
   const [row] = await db.select().from(users).where(eq(users.id, id)).limit(1);
@@ -384,4 +385,141 @@ export async function setState(key: string, value: unknown) {
 export async function deleteConferences(ids: string[]) {
   if (!ids.length) return;
   await db.delete(conferences).where(inArray(conferences.id, ids));
+}
+
+// ---------- Bacarıqlar ----------
+
+export async function updateUserSkills(id: string, skills: string[]) {
+  await db.update(users).set({ skills }).where(eq(users.id, id));
+}
+
+/** Bütün istifadəçilərin qeyd etdiyi bacarıqlar (təklif siyahısı üçün) */
+export async function listAllSkills() {
+  const rows = await db.select({ skills: users.skills }).from(users);
+  return skillList(rows.map((r) => r.skills ?? []));
+}
+
+// ---------- Qrantlar ----------
+
+type GrantRow = typeof grants.$inferSelect;
+const toGrant = (r: GrantRow): Grant => {
+  const o = r.overrides ?? {};
+  return {
+    id: r.id,
+    source: r.source,
+    sourceUrl: r.sourceUrl,
+    title: r.title,
+    summary: r.summary,
+    bodyHtml: r.bodyHtml,
+    image: r.image,
+    documents: r.documents ?? [],
+    publishedAt: r.publishedAt.toISOString(),
+    deadline: "deadline" in o ? (o.deadline ?? null) : iso(r.deadline),
+    amount: "amount" in o ? (o.amount ?? null) : r.amount,
+    fields: o.fields ?? r.fields ?? [],
+    overrides: o,
+    hidden: r.hidden,
+  };
+};
+
+export async function listGrants({ includeHidden = false } = {}) {
+  const rows = await db.select().from(grants).orderBy(desc(grants.publishedAt));
+  return rows.map(toGrant).filter((g) => includeHidden || !g.hidden);
+}
+
+export async function getGrant(id: string) {
+  const [row] = await db.select().from(grants).where(eq(grants.id, id)).limit(1);
+  return row ? toGrant(row) : null;
+}
+
+export async function listGrantIds() {
+  return new Set((await db.select({ id: grants.id }).from(grants)).map((r) => r.id));
+}
+
+export type GrantUpsert = Omit<typeof grants.$inferInsert, "overrides" | "hidden">;
+
+/** Mənbədən gələn məlumat; adminin düzəlişlərinə (overrides, hidden) toxunmur */
+export async function upsertGrant(g: GrantUpsert) {
+  const { id, ...rest } = g;
+  await db.insert(grants).values(g).onConflictDoUpdate({ target: grants.id, set: rest });
+}
+
+export async function setGrantOverrides(id: string, overrides: GrantOverrides, hidden: boolean) {
+  await db.update(grants).set({ overrides, hidden }).where(eq(grants.id, id));
+}
+
+export async function deleteGrants(ids: string[]) {
+  if (ids.length) await db.delete(grants).where(inArray(grants.id, ids));
+}
+
+// ---------- İşçi qruplar və dəvətlər ----------
+
+type GroupRow = typeof grantGroups.$inferSelect;
+const toGroup = (r: GroupRow): GrantGroup => ({ ...r, respondBy: iso(r.respondBy), createdAt: r.createdAt.toISOString() });
+type InvitationRow = typeof grantInvitations.$inferSelect;
+const toInvitation = (r: InvitationRow): GrantInvitation => ({
+  ...r,
+  createdAt: r.createdAt.toISOString(),
+  respondedAt: iso(r.respondedAt),
+});
+
+export async function insertGrantGroup(group: GrantGroup, invitations: Omit<GrantInvitation, "id" | "groupId" | "createdAt" | "respondedAt" | "status">[]) {
+  await db.insert(grantGroups).values({ ...group, respondBy: date(group.respondBy), createdAt: new Date(group.createdAt) });
+  if (invitations.length) {
+    await db.insert(grantInvitations).values(invitations.map((i) => ({ ...i, id: newId("gi"), groupId: group.id, status: "pending" as const })));
+  }
+}
+
+export async function listGrantGroups(grantId?: string) {
+  const q = db.select().from(grantGroups).orderBy(desc(grantGroups.createdAt));
+  return (await (grantId ? q.where(eq(grantGroups.grantId, grantId)) : q)).map(toGroup);
+}
+
+export async function getGrantGroup(id: string) {
+  const [row] = await db.select().from(grantGroups).where(eq(grantGroups.id, id)).limit(1);
+  return row ? toGroup(row) : null;
+}
+
+export async function setGrantGroupStatus(id: string, status: GrantGroup["status"]) {
+  await db.update(grantGroups).set({ status }).where(eq(grantGroups.id, id));
+}
+
+export async function listInvitationsByGroups(groupIds: string[]) {
+  if (!groupIds.length) return [];
+  return (await db.select().from(grantInvitations).where(inArray(grantInvitations.groupId, groupIds))).map(toInvitation);
+}
+
+export async function listInvitationsByUser(userId: string) {
+  return (await db.select().from(grantInvitations).where(eq(grantInvitations.userId, userId))).map(toInvitation);
+}
+
+/** Dəvətə cavab: yalnız gözləyən dəvət dəyişdirilir */
+export async function respondInvitation(groupId: string, userId: string, status: "accepted" | "declined") {
+  const updated = await db
+    .update(grantInvitations)
+    .set({ status, respondedAt: new Date() })
+    .where(and(eq(grantInvitations.groupId, groupId), eq(grantInvitations.userId, userId)))
+    .returning({ id: grantInvitations.id });
+  return updated.length > 0;
+}
+
+/** Dəvəti olmayan üzv qrupa özü qoşulur (kind: request) */
+export async function insertJoinRequest(groupId: string, userId: string, matchedSkills: string[]) {
+  const inserted = await db
+    .insert(grantInvitations)
+    .values({ id: newId("gi"), groupId, userId, kind: "request", status: "accepted", matchedSkills, respondedAt: new Date() })
+    .onConflictDoNothing({ target: [grantInvitations.groupId, grantInvitations.userId] })
+    .returning({ id: grantInvitations.id });
+  return inserted.length > 0;
+}
+
+/** Sonradan əlavə olunan dəvətlər (məs. "hamıya açıq et") — mövcud olanlara toxunmur */
+export async function addInvitations(groupId: string, invitations: { userId: string; kind: GrantInvitation["kind"]; matchedSkills: string[] }[]) {
+  if (!invitations.length) return 0;
+  const inserted = await db
+    .insert(grantInvitations)
+    .values(invitations.map((i) => ({ ...i, id: newId("gi"), groupId, status: "pending" as const })))
+    .onConflictDoNothing({ target: [grantInvitations.groupId, grantInvitations.userId] })
+    .returning({ id: grantInvitations.id });
+  return inserted.length;
 }

@@ -50,6 +50,13 @@
       "when": 1791228780175,
       "tag": "0006_conferences",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791311053262,
+      "tag": "0007_grants",
+      "breakpoints": true
     }
   ]
 }

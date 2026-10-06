@@ -18,10 +18,18 @@ async function main() {
     `Konfranslar: ${res.added} yeni, ${res.updated} yeniləndi, ${res.pruned ?? 0} köhnə silindi` +
       (res.errors.length ? `\nXəta: ${res.errors.join("; ")}` : ""),
   );
-  if (res.errors.length) process.exit(1);
+  // Qrantlar (UNEC hissəsi də eyni Cloudflare məhdudiyyətinə düşür)
+  const { syncGrants } = await import("../src/lib/grants/source");
+  const g = await syncGrants({ force });
+  console.log(`Qrantlar: ${g.added} yeni, ${g.updated} yeniləndi, ${g.pruned} köhnə silindi` + (g.errors.length ? `
+Xəta: ${g.errors.join("; ")}` : ""));
+  if (res.errors.length || g.errors.length) process.exit(1);
 }
 
-main().catch((e) => {
+main()
+  // PGlite açıq bağlantı saxlayır — iş bitəndə prosesi açıq-aydın bitir
+  .then(() => process.exit(0))
+  .catch((e) => {
   console.error(e);
   process.exit(1);
 });

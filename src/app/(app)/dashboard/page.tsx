@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ConferencesCard } from "@/components/dashboard/ConferencesCard";
+import { GrantInviteCard, SkillsNudgeCard } from "@/components/dashboard/GrantInviteCard";
 import { SurveyCard } from "@/components/dashboard/SurveyCard";
 import { SurveyPrompt } from "@/components/dashboard/SurveyPrompt";
 import { Icon } from "@/components/Icon";
@@ -27,6 +28,10 @@ function renderCard(card: DashboardCard) {
       return <SurveyCard key={card.key} data={card.data} />;
     case "conferences":
       return <ConferencesCard key={card.key} data={card.data} />;
+    case "grantInvite":
+      return <GrantInviteCard key={card.key} data={card.data} />;
+    case "skillsNudge":
+      return <SkillsNudgeCard key={card.key} grantCount={card.data.grantCount} />;
   }
 }
 

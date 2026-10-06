@@ -21,7 +21,7 @@ export interface ModuleContext {
 export type IconName =
   | "home" | "survey" | "user" | "settings" | "chart" | "plus" | "file"
   | "calendar" | "bell" | "check" | "clock" | "logout" | "arrow-right" | "x"
-  | "chevron-left" | "chevron-right" | "template" | "megaphone" | "lock" | "users" | "newspaper" | "pin" | "link" | "video" | "phone";
+  | "chevron-left" | "chevron-right" | "template" | "megaphone" | "lock" | "users" | "newspaper" | "pin" | "link" | "video" | "phone" | "briefcase";
 
 export interface NavLink {
   label: string;
@@ -41,7 +41,25 @@ export interface NavEntry extends NavLink {
 /** Dashboard kartı — `kind` uyğun React komponentini seçir. */
 export type DashboardCard =
   | { kind: "survey"; key: string; priority: number; data: SurveyCardData }
-  | { kind: "conferences"; key: string; priority: number; data: ConferencesCardData };
+  | { kind: "conferences"; key: string; priority: number; data: ConferencesCardData }
+  | { kind: "grantInvite"; key: string; priority: number; data: GrantInviteCardData }
+  | { kind: "skillsNudge"; key: string; priority: number; data: { grantCount: number } };
+
+export interface GrantInviteCardData {
+  groupId: string;
+  grantId: string;
+  grantTitle: string;
+  groupTitle: string;
+  description: string;
+  /** invite — bacarığa görə dəvət; offer — hamıya açıq təklif */
+  kind: "invite" | "offer" | "request";
+  matchedSkills: string[];
+  requiredSkills: string[];
+  memberCount: number;
+  targetSize: number | null;
+  respondBy: string | null;
+  deadline: string | null;
+}
 
 export interface ConferencesCardData {
   /** Müraciəti açıq olan aktual konfransların sayı */

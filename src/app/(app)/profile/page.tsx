@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import { logout } from "@/app/login/actions";
 import { Icon } from "@/components/Icon";
 import { requireUser } from "@/lib/auth";
-import { listFaculties } from "@/lib/db/repo";
+import { listAllSkills, listFaculties } from "@/lib/db/repo";
 import { avatarUrl } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/types";
 import { AvatarUploader } from "./AvatarUploader";
-import { PasswordForm, ProfileForm } from "./ProfileForms";
+import { PasswordForm, ProfileForm, SkillsForm } from "./ProfileForms";
 
 export const metadata: Metadata = { title: "Profil" };
 
 export default async function ProfilePage() {
   const user = await requireUser();
-  const faculties = await listFaculties();
+  const [faculties, allSkills] = await Promise.all([listFaculties(), listAllSkills()]);
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-6 sm:px-6 lg:pt-10">
@@ -28,6 +28,14 @@ export default async function ProfilePage() {
       <section className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-line sm:p-5">
         <h2 className="mb-4 font-semibold">Şəxsi məlumatlar</h2>
         <ProfileForm user={{ name: user.name, faculty: user.faculty, position: user.position, academicTitle: user.academicTitle }} faculties={faculties} />
+      </section>
+
+      <section id="bacariqlar" className="mt-4 scroll-mt-20 rounded-2xl bg-white p-4 ring-1 ring-line sm:p-5">
+        <h2 className="font-semibold">Elmi maraq və bacarıqlar</h2>
+        <p className="mb-4 mt-1 text-sm text-muted">
+          Uyğun qrant müsabiqəsi üçün işçi qrup yaradılanda, bu sahələr üzrə sizə avtomatik dəvət göndəriləcək.
+        </p>
+        <SkillsForm skills={user.skills ?? []} suggestions={allSkills} />
       </section>
 
       <section className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-line sm:p-5">

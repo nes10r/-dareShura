@@ -44,7 +44,10 @@ async function main() {
   if (!process.env.SUPERADMIN_PASSWORD) console.log(`Superadmin: superadmin@unec.edu.az / ${password}  (daxil olub profildən dəyişin)`);
 }
 
-main().catch((e) => {
+main()
+  // PGlite açıq bağlantı saxlayır — iş bitəndə prosesi açıq-aydın bitir
+  .then(() => process.exit(0))
+  .catch((e) => {
   console.error(e);
   process.exit(1);
 });

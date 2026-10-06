@@ -50,6 +50,18 @@ Superadmin şifrəsi `SUPERADMIN_PASSWORD` mühit dəyişənindən götürülür
   Daimi həll — UNEC İT-dən `UNEC-GAS-Platforma` User-Agent-inə icazə. O vaxta qədər Azərbaycandakı kompüterdən
   `npm run konfrans:sync` (və ya Windows Task Scheduler ilə müntəzəm).
 
+## Qrantlar və işçi qruplar
+
+- Mənbələr: Azərbaycan Elm Fondu (`aef.gov.az/az/grant`) və UNEC "Müsabiqə" bölməsindən "qrant" elanları (12 saatdan bir).
+  Elm Fondunun şərtləri PDF-dədir — son tarix/məbləği admin daxil edir. aef.gov.az səhv TLS zənciri göndərir;
+  çatışmayan aralıq sertifikat `src/lib/grants/aef-ca.ts`-dədir (yalnız bu sayt üçün).
+- Üzvlər profildə (və qeydiyyatda) **elmi maraq və bacarıqlarını** teq kimi qeyd edir.
+- Admin qrant səhifəsində **işçi qrup** yaradır və tələb olunan bacarıqları seçir:
+  bacarığı uyğun olanlara **dəvət**, uyğun heç kim yoxdursa hamıya **təklif** gedir (dashboard kartı + menyu nişanı).
+  Qəbul edənlər qrupun üzvü olur; dəvətsiz üzv özü qoşula bilər; admin statusları görür, e-poçtları kopyalayır.
+- Lokal test: `DATABASE_URL= npm run db:migrate && DATABASE_URL= npm run db:seed`, sonra
+  `DATABASE_URL= ALLOW_PGLITE=1 npx next start` — canlı bazada istifadəçilərə bildiriş gedən test etməyin.
+
 ## Dynamic Module Architecture
 
 Naviqasiya və dashboard statik deyil — hər sorğuda modul provider-lərindən generasiya olunur.

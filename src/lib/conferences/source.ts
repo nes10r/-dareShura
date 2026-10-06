@@ -8,7 +8,7 @@ import { isCurrent } from "./view";
  * news.unec.edu.az → "Konfrans" bölməsinin elanlarını oxuyur və bazaya yazır.
  * Mənbə Joomla saytıdır: siyahı səhifəsində 10 elan, ?start=10, 20 ... ilə səhifələnir.
  */
-const ORIGIN = "https://news.unec.edu.az";
+export const ORIGIN = "https://news.unec.edu.az";
 const CATEGORY_PATH = "/elan/86-konfrans";
 const USER_AGENT = "Mozilla/5.0 (compatible; UNEC-GAS-Platforma/1.0)";
 
@@ -29,7 +29,7 @@ const LOCK_KEY = "conferences.syncLock";
 /** Avtomatik (səhifəyə daxil olanda) yenilənmə intervalı */
 export const AUTO_SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
-async function get(path: string) {
+export async function get(path: string) {
   const res = await fetch(ORIGIN + path, {
     headers: { "User-Agent": USER_AGENT, "Accept-Language": "az" },
     signal: AbortSignal.timeout(15_000),
@@ -57,16 +57,16 @@ export class SourceError extends Error {
   }
 }
 
-const text = (html: string) =>
+export const text = (html: string) =>
   decodeHTML(html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " "))
     .replace(/\s+/g, " ")
     // Mənbədə mətnin əvvəlində bəzək baş hərfi ("A ...") qalır
     .replace(/^[A-ZƏ]\s+(?=[A-ZƏÖÜŞÇĞİ0-9“"])/u, "")
     .trim();
 
-const absolute = (url: string) => (url.startsWith("http") ? url : ORIGIN + (url.startsWith("/") ? url : `/${url}`));
+export const absolute = (url: string) => (url.startsWith("http") ? url : ORIGIN + (url.startsWith("/") ? url : `/${url}`));
 
-interface ListingItem {
+export interface ListingItem {
   id: string;
   path: string;
   title: string;
@@ -74,10 +74,13 @@ interface ListingItem {
   publishedAt: Date;
 }
 
-function parseListing(html: string): ListingItem[] {
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\/-]/g, "\\$&");
+
+/** news.unec.edu.az kateqoriya siyahısı (məs. "/elan/86-konfrans") */
+export function parseListing(html: string, categoryPath = CATEGORY_PATH): ListingItem[] {
   const items: ListingItem[] = [];
   for (const block of html.split(/<article\b/).slice(1)) {
-    const link = block.match(/href="(\/elan\/86-konfrans\/(\d+)-[^"?#]+)"/);
+    const link = block.match(new RegExp(`href="(${escapeRe(categoryPath)}/(\\d+)-[^"?#]+)"`));
     const date = block.match(/datetime="([^"]+)"/);
     if (!link || !date) continue;
     const img = block.match(/<img[^>]+src="([^"]+)"/);
@@ -94,7 +97,7 @@ function parseListing(html: string): ListingItem[] {
 }
 
 /** Mənbə HTML-i: yalnız təhlükəsiz teqlər, linklər və şəkillər mütləq URL-ə çevrilir. */
-function cleanBody(html: string) {
+export function cleanBody(html: string) {
   return sanitizeHtml(html.replace(/<script[\s\S]*?<\/script>/gi, ""), {
     // Şəkil səhifədə ayrıca göstərilir — mətndən (qalereyadan) çıxarılır
     allowedTags: ["p", "br", "strong", "b", "em", "i", "u", "ul", "ol", "li", "a", "h2", "h3", "h4", "blockquote"],

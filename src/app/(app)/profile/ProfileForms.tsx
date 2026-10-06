@@ -3,7 +3,9 @@
 import { useActionState, useEffect, useRef } from "react";
 import { FacultyInput } from "@/components/ui/FacultyInput";
 import { ACADEMIC_TITLES } from "@/lib/validation";
-import { changePassword, saveProfile, type FormState } from "./actions";
+import { TagInput } from "@/components/ui/TagInput";
+import { MAX_SKILLS } from "@/lib/skills";
+import { changePassword, saveProfile, saveSkills, type FormState } from "./actions";
 
 const inputCls =
   "mt-1.5 h-12 w-full rounded-xl border border-line bg-white px-4 text-base outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100";
@@ -80,6 +82,19 @@ export function PasswordForm() {
       <Status state={state} okText="Şifrə dəyişdirildi." />
       <button type="submit" disabled={pending} className="h-12 w-full rounded-xl bg-white font-semibold ring-1 ring-line hover:bg-slate-50 disabled:opacity-60 sm:w-auto sm:px-6">
         {pending ? "Dəyişdirilir…" : "Şifrəni dəyiş"}
+      </button>
+    </form>
+  );
+}
+
+export function SkillsForm({ skills, suggestions }: { skills: string[]; suggestions: string[] }) {
+  const [state, action, pending] = useActionState<FormState, FormData>(saveSkills, {});
+  return (
+    <form action={action} className="space-y-4">
+      <TagInput name="skills" defaultValue={skills} suggestions={suggestions} max={MAX_SKILLS} placeholder="Məs.: Maliyyə, Süni intellekt, Ekonometrika" />
+      <Status state={state} okText="Bacarıqlar yadda saxlanıldı." />
+      <button type="submit" disabled={pending} className="h-12 w-full rounded-xl bg-brand-700 font-semibold text-white hover:bg-brand-800 disabled:opacity-60 sm:w-auto sm:px-6">
+        {pending ? "Saxlanılır…" : "Yadda saxla"}
       </button>
     </form>
   );

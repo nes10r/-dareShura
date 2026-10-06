@@ -11,6 +11,7 @@ export interface User {
   academicTitle: string | null;
   inviteId?: string | null;
   avatarUpdatedAt?: string | null;
+  skills?: string[];
   createdAt: string;
 }
 
@@ -182,4 +183,65 @@ export interface Conference {
   auto: Required<ConferenceOverrides>;
   hidden: boolean;
   fetchedAt: string;
+}
+
+// ---------- Qrantlar ----------
+
+export type GrantSource = "aef" | "unec" | "manual";
+export interface GrantDocument {
+  title: string;
+  url: string;
+}
+export interface GrantOverrides {
+  deadline?: string | null;
+  amount?: string | null;
+  fields?: string[];
+}
+
+export interface Grant {
+  id: string;
+  source: GrantSource;
+  sourceUrl: string | null;
+  title: string;
+  summary: string;
+  bodyHtml: string;
+  image: string | null;
+  documents: GrantDocument[];
+  publishedAt: string;
+  /** Effektiv dəyərlər (avtomatik + admin düzəlişləri) */
+  deadline: string | null;
+  amount: string | null;
+  fields: string[];
+  overrides: GrantOverrides;
+  hidden: boolean;
+}
+
+export type GrantGroupMode = "matched" | "open";
+export type GrantGroupStatus = "open" | "closed";
+export type GrantInviteKind = "invite" | "offer" | "request";
+export type GrantInviteStatus = "pending" | "accepted" | "declined";
+
+export interface GrantGroup {
+  id: string;
+  grantId: string;
+  title: string;
+  description: string;
+  requiredSkills: string[];
+  targetSize: number | null;
+  respondBy: string | null;
+  mode: GrantGroupMode;
+  status: GrantGroupStatus;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface GrantInvitation {
+  id: string;
+  groupId: string;
+  userId: string;
+  kind: GrantInviteKind;
+  status: GrantInviteStatus;
+  matchedSkills: string[];
+  createdAt: string;
+  respondedAt: string | null;
 }

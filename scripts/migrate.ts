@@ -13,7 +13,10 @@ async function main() {
   console.log(`Migrasiyalar tətbiq olundu (${process.env.DATABASE_URL ? "Neon" : "PGlite"}).`);
 }
 
-main().catch((e) => {
+main()
+  // PGlite açıq bağlantı saxlayır — iş bitəndə prosesi açıq-aydın bitir
+  .then(() => process.exit(0))
+  .catch((e) => {
   console.error(e);
   process.exit(1);
 });

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { Logo } from "@/components/ui/Logo";
 import { getSessionUser } from "@/lib/auth";
-import { findValidInvite, listFaculties } from "@/lib/db/repo";
+import { findValidInvite, listAllSkills, listFaculties } from "@/lib/db/repo";
 import { formatDateTime } from "@/lib/format";
 import { RegisterForm } from "./RegisterForm";
 
@@ -15,7 +15,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   if (await getSessionUser()) redirect("/dashboard");
   const { token = "" } = await searchParams;
   const invite = await findValidInvite(token);
-  const faculties = invite ? await listFaculties() : [];
+  const [faculties, skills] = invite ? await Promise.all([listFaculties(), listAllSkills()]) : [[], []];
 
   return (
     <div className="flex min-h-dvh flex-col bg-white lg:flex-row">
@@ -42,7 +42,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
               <p className="mt-3 flex items-center gap-2 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-800">
                 <Icon name="clock" className="size-4 shrink-0" /> Link {formatDateTime(invite.expiresAt)} tarixinədək etibarlıdır
               </p>
-              <RegisterForm token={token} faculties={faculties} />
+              <RegisterForm token={token} faculties={faculties} skills={skills} />
             </>
           ) : (
             <div className="text-center sm:text-left">
