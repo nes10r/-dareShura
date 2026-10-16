@@ -42,7 +42,7 @@ export async function saveResearchProfile(_prev: ResearchState, formData: FormDa
   if (orcid !== (user.orcid ?? null)) {
     const res = await syncUserPublications({ id: user.id, orcid });
     if (!res.ok) info = `Profil saxlanıldı, amma nəşrləri yükləmək alınmadı: ${res.error}`;
-    else if (orcid && !res.found) info = "Profil saxlanıldı. Bu ORCID ilə OpenAlex-də müəllif tapılmadı — nəşrləriniz ORCID-ə bağlı olmaya bilər.";
+    else if (orcid && !res.found) info = "Profil saxlanıldı. ORCID profilinizdə açıq nəşr tapılmadı — orcid.org-da işlərinizin görünürlüyünü «Everyone» edin.";
     else if (orcid) info = `Profil saxlanıldı. ${res.count} nəşr yükləndi.`;
   }
   revalidatePath("/", "layout");
@@ -55,7 +55,7 @@ export async function refreshMyPublications(): Promise<ResearchState> {
   const res = await syncUserPublications(user);
   revalidatePath("/", "layout");
   if (!res.ok) return { error: res.error };
-  return { ok: true, info: res.found ? `${res.count} nəşr yeniləndi.` : "OpenAlex-də bu ORCID ilə müəllif tapılmadı." };
+  return { ok: true, info: res.found ? `${res.count} nəşr yeniləndi.` : "ORCID profilinizdə açıq nəşr tapılmadı." };
 }
 
 /** Bir istifadəçinin eyni anda ən çox cavabsız (göndərilmiş) təklifi */

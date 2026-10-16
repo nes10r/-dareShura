@@ -4,7 +4,7 @@ import type { User } from "./types";
 
 export type SyncOutcome = { ok: true; found: boolean; count: number } | { ok: false; error: string };
 
-/** İstifadəçinin ORCID-i ilə OpenAlex-dən nəşrləri və göstəriciləri yeniləyir */
+/** İstifadəçinin ORCID-i ilə ORCID və OpenAlex-dən nəşrləri və göstəriciləri yeniləyir */
 export async function syncUserPublications(user: Pick<User, "id" | "orcid">): Promise<SyncOutcome> {
   if (!user.orcid) {
     await clearResearchSync(user.id);
@@ -13,7 +13,7 @@ export async function syncUserPublications(user: Pick<User, "id" | "orcid">): Pr
   try {
     const r = await fetchByOrcid(user.orcid);
     await saveResearchSync(user.id, r.openalexId, r.stats, r.publications);
-    return { ok: true, found: !!r.openalexId, count: r.publications.length };
+    return { ok: true, found: !!r.openalexId || r.publications.length > 0, count: r.publications.length };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Nəşrləri yükləmək mümkün olmadı." };
   }

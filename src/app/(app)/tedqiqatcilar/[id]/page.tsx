@@ -168,7 +168,7 @@ export default async function ResearcherPage({ params }: { params: Promise<{ id:
       <section className="mt-4 rounded-2xl bg-white p-5 ring-1 ring-line">
         <div className="mb-1 flex items-baseline justify-between gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">Nəşrlər{pubs.length ? ` · ${pubs.length}` : ""}</h2>
-          {user.pubsSyncedAt && <span className="text-[11px] text-muted">OpenAlex · {formatDate(user.pubsSyncedAt)}</span>}
+          {user.pubsSyncedAt && <span className="text-[11px] text-muted">ORCID · OpenAlex · {formatDate(user.pubsSyncedAt)}</span>}
         </div>
         {pubs.length ? (
           <>
@@ -186,7 +186,7 @@ export default async function ResearcherPage({ params }: { params: Promise<{ id:
         ) : (
           <p className="py-2 text-sm text-muted">
             {user.orcid
-              ? "ORCID ilə OpenAlex-də nəşr tapılmadı."
+              ? "ORCID profilində açıq nəşr tapılmadı."
               : self
                 ? "ORCID-inizi əlavə edin — nəşrləriniz avtomatik gələcək."
                 : "Nəşrlər hələ əlavə olunmayıb."}

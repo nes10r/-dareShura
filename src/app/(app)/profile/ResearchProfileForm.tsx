@@ -67,7 +67,7 @@ export function ResearchProfileForm({
           <span className="text-sm font-medium">ORCID</span>
           <input name="orcid" defaultValue={initial.orcid} placeholder="0000-0000-0000-0000" inputMode="text" autoCapitalize="characters" className={inputCls} />
           <span className="mt-1 block text-xs text-muted">
-            Nəşrləriniz OpenAlex-dən avtomatik gələcək.{" "}
+            Nəşrləriniz ORCID profilinizdən avtomatik gələcək.{" "}
             <a href="https://orcid.org/register" target="_blank" rel="noopener noreferrer" className="font-medium text-brand-700 underline">
               ORCID yoxdur?
             </a>
