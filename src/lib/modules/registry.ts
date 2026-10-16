@@ -1,5 +1,6 @@
 import { cache } from "react";
 import type { User } from "../types";
+import { booksModule } from "./providers/books";
 import { conferencesAdminModule, conferencesModule } from "./providers/conferences";
 import { grantsAdminModule, grantsModule } from "./providers/grants";
 import { newsAdminModule } from "./providers/news";
@@ -12,7 +13,7 @@ import type { DashboardCard, ModuleProvider, ModuleSummary, NavEntry } from "./t
  * Qeydiyyatdan keçmiş modullar. Gələcək modullar (iclas, tapşırıq, səsvermə, qərar)
  * eyni interfeysi implement edib bura əlavə olunacaq.
  */
-const PROVIDERS: ModuleProvider[] = [surveyModule, surveyAdminModule, newsAdminModule, conferencesModule, conferencesAdminModule, grantsModule, grantsAdminModule, researchersModule, inviteAdminModule, usersAdminModule];
+const PROVIDERS: ModuleProvider[] = [surveyModule, surveyAdminModule, newsAdminModule, conferencesModule, conferencesAdminModule, grantsModule, grantsAdminModule, researchersModule, booksModule, inviteAdminModule, usersAdminModule];
 
 export interface ResolvedModules {
   modules: ModuleSummary[];

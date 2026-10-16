@@ -1,4 +1,4 @@
-import type { CollabRequest, User } from "../types";
+import type { BookRequest, CollabRequest, User } from "../types";
 
 /**
  * Dynamic Module Architecture
@@ -21,7 +21,7 @@ export interface ModuleContext {
 export type IconName =
   | "home" | "survey" | "user" | "settings" | "chart" | "plus" | "file"
   | "calendar" | "bell" | "check" | "clock" | "logout" | "arrow-right" | "x"
-  | "chevron-left" | "chevron-right" | "template" | "megaphone" | "lock" | "users" | "newspaper" | "pin" | "link" | "video" | "phone" | "briefcase" | "pause" | "play" | "image" | "type";
+  | "chevron-left" | "chevron-right" | "template" | "megaphone" | "lock" | "users" | "newspaper" | "pin" | "link" | "video" | "phone" | "briefcase" | "pause" | "play" | "image" | "type" | "book";
 
 export interface NavLink {
   label: string;
@@ -44,7 +44,23 @@ export type DashboardCard =
   | { kind: "conferences"; key: string; priority: number; data: ConferencesCardData }
   | { kind: "grantInvite"; key: string; priority: number; data: GrantInviteCardData }
   | { kind: "skillsNudge"; key: string; priority: number; data: { grantCount: number } }
-  | { kind: "collabIncoming" | "collabAccepted"; key: string; priority: number; data: { request: CollabRequest; other: CollabCardPerson } };
+  | { kind: "collabIncoming" | "collabAccepted"; key: string; priority: number; data: { request: CollabRequest; other: CollabCardPerson } }
+  | { kind: "bookPending" | "bookAccepted"; key: string; priority: number; data: BookRequestCardData }
+  | { kind: "bookSuggest"; key: string; priority: number; data: BookSuggestCardData };
+
+export interface BookRequestCardData {
+  request: BookRequest;
+  bookId: string;
+  bookTitle: string;
+  /** "3. Fəslin adı" və ya "Yeni fəsil: …" */
+  chapter: string;
+  /** Qarşı tərəf: dəvətdə redaktor/namizəd, müraciətdə namizəd/redaktor */
+  other: CollabCardPerson;
+}
+
+export interface BookSuggestCardData {
+  items: { id: string; title: string; editor: string; openChapters: number; matched: string[] }[];
+}
 
 export type CollabCardPerson = { id: string; name: string; email: string; position: string; avatarUpdatedAt?: string | null };
 

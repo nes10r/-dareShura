@@ -76,6 +76,13 @@ Superadmin şifrəsi `SUPERADMIN_PASSWORD` mühit dəyişənindən götürülür
 - Kataloq (`/tedqiqatcilar`): sahə/ad/fakültə üzrə axtarış, populyar sahələr və "Əməkdaşlığa açıq" filtri.
 - "Birgə işləmək təklifi": mövzu + qısa mesaj. Alan tərəf dashboard-da kart və nişan görür; qəbul edildikdən sonra e-poçtlar qarşılıqlı açılır. Eyni anda ən çox 5 cavabsız təklif.
 
+## Kitab layihələri
+
+- Üzv kitab təklifi (proposal) hazırlayır (`/kitablar/yeni`): növ, ad, məqsəd/əhatə, elmi sahələr, dil, nəşriyyat planı, fəsillər üçün son tarix, fəsil planı. Hazırlayan — redaktor.
+- Üzvlər mövcud fəslə və ya öz fəsil mövzusu ilə müraciət edir; redaktor üzvləri (sahəsi uyğun olanlar yuxarıda) konkret fəslə və ya yeni fəsil mövzusuna dəvət edir. Qəbul edildikdə müəllif fəslə əlavə olunur (həmmüəlliflik mümkündür).
+- Bildirişlər dashboard-da və "Kitablar" menyusunda nişanla; sahəsi uyğun üzvlərə yeni kitablar 14 gün ərzində təklif kartı kimi göstərilir.
+- Komandanın e-poçtları yalnız redaktor və müəlliflərə görünür. Redaktor müəllif qəbulunu bağlaya, fəsil/müəllif çıxara bilər; admin moderasiya üçün silə bilər.
+
 ## Dynamic Module Architecture
 
 Naviqasiya və dashboard statik deyil — hər sorğuda modul provider-lərindən generasiya olunur.

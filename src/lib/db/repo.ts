@@ -2,9 +2,9 @@ import { randomBytes } from "node:crypto";
 import { and, asc, count, desc, eq, gt, inArray, isNull, lte, or } from "drizzle-orm";
 import { facultyList } from "../faculties";
 import { skillList } from "../skills";
-import type { AnswerValue, CollabRequest, Conference, ConferenceOverrides, Grant, GrantGroup, GrantInvitation, GrantOverrides, Invite, NewsItem, Publication, ResearchStats, Survey, SurveyResponse, User } from "../types";
+import type { AnswerValue, BookChapter, BookProject, BookRequest, CollabRequest, Conference, ConferenceOverrides, Grant, GrantGroup, GrantInvitation, GrantOverrides, Invite, NewsItem, Publication, ResearchStats, Survey, SurveyResponse, User } from "../types";
 import { db } from "./client";
-import { appState, collabRequests, conferences, grantGroups, grantInvitations, grants, invites, news, stories, storyViews, surveyResponses, surveys, userAvatars, userPublications, users } from "./schema";
+import { appState, bookChapters, bookProjects, bookRequests, collabRequests, conferences, grantGroups, grantInvitations, grants, invites, news, stories, storyViews, surveyResponses, surveys, userAvatars, userPublications, users } from "./schema";
 
 /**
  * Verilənlər bazası ilə bütün iş bu qatdan keçir.
@@ -675,4 +675,112 @@ export async function markCollabSeen(id: string, fromUserId: string) {
 
 export async function deleteCollabRequest(id: string, fromUserId: string) {
   await db.delete(collabRequests).where(and(eq(collabRequests.id, id), eq(collabRequests.fromUserId, fromUserId), eq(collabRequests.status, "pending")));
+}
+
+// ---------- Kitab layihələri ----------
+
+type BookRow = typeof bookProjects.$inferSelect;
+const toBook = (r: BookRow): BookProject => ({ ...r, topics: r.topics ?? [], deadline: iso(r.deadline), createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() });
+type ChapterRow = typeof bookChapters.$inferSelect;
+const toChapter = ({ createdAt: _c, ...r }: ChapterRow): BookChapter => ({ ...r, authorIds: r.authorIds ?? [] });
+type BookReqRow = typeof bookRequests.$inferSelect;
+const toBookReq = (r: BookReqRow): BookRequest => ({
+  ...r,
+  createdAt: r.createdAt.toISOString(),
+  respondedAt: iso(r.respondedAt),
+  initiatorSeenAt: iso(r.initiatorSeenAt),
+});
+
+export type BookInput = Pick<BookProject, "title" | "kind" | "description" | "topics" | "language" | "publisher" | "deadline">;
+
+export async function insertBook(b: BookInput, editorId: string, chapters: { title: string; description: string }[]) {
+  const id = newId("bk");
+  await db.insert(bookProjects).values({ ...b, id, editorId, deadline: date(b.deadline) });
+  if (chapters.length) {
+    await db.insert(bookChapters).values(chapters.map((c, i) => ({ ...c, id: newId("ch"), bookId: id, position: i + 1, authorIds: [] })));
+  }
+  return id;
+}
+
+export async function updateBook(id: string, b: Partial<BookInput> & { status?: "open" | "closed" }) {
+  const { deadline, ...rest } = b;
+  await db
+    .update(bookProjects)
+    .set({ ...rest, ...(deadline !== undefined ? { deadline: date(deadline) } : {}), updatedAt: new Date() })
+    .where(eq(bookProjects.id, id));
+}
+
+export async function deleteBook(id: string) {
+  await db.delete(bookProjects).where(eq(bookProjects.id, id));
+}
+
+export async function getBook(id: string) {
+  const [row] = await db.select().from(bookProjects).where(eq(bookProjects.id, id)).limit(1);
+  return row ? toBook(row) : null;
+}
+
+export async function listBooks() {
+  return (await db.select().from(bookProjects).orderBy(desc(bookProjects.createdAt))).map(toBook);
+}
+
+export async function listChapters(bookIds: string[]) {
+  if (!bookIds.length) return [];
+  return (await db.select().from(bookChapters).where(inArray(bookChapters.bookId, bookIds)).orderBy(asc(bookChapters.position))).map(toChapter);
+}
+
+export async function insertChapter(bookId: string, c: { title: string; description: string; authorIds?: string[] }) {
+  const existing = await listChapters([bookId]);
+  const id = newId("ch");
+  await db.insert(bookChapters).values({ id, bookId, title: c.title, description: c.description, authorIds: c.authorIds ?? [], position: Math.max(0, ...existing.map((x) => x.position)) + 1 });
+  return id;
+}
+
+export async function updateChapter(id: string, c: Partial<Pick<BookChapter, "title" | "description" | "authorIds">>) {
+  await db.update(bookChapters).set(c).where(eq(bookChapters.id, id));
+}
+
+export async function deleteChapter(id: string) {
+  await db.delete(bookChapters).where(eq(bookChapters.id, id));
+}
+
+export async function insertBookRequest(r: Pick<BookRequest, "bookId" | "chapterId" | "proposedTitle" | "userId" | "kind" | "message">) {
+  await db.insert(bookRequests).values({ ...r, id: newId("br") });
+}
+
+export async function getBookRequest(id: string) {
+  const [row] = await db.select().from(bookRequests).where(eq(bookRequests.id, id)).limit(1);
+  return row ? toBookReq(row) : null;
+}
+
+export async function listBookRequests(where: { bookIds?: string[]; userId?: string }) {
+  const conds = [];
+  if (where.bookIds) {
+    if (!where.bookIds.length) return [];
+    conds.push(inArray(bookRequests.bookId, where.bookIds));
+  }
+  if (where.userId) conds.push(eq(bookRequests.userId, where.userId));
+  const rows = await db
+    .select()
+    .from(bookRequests)
+    .where(conds.length ? and(...conds) : undefined)
+    .orderBy(desc(bookRequests.createdAt));
+  return rows.map(toBookReq);
+}
+
+/** Yalnız gözləyən dəvət/müraciətin statusu dəyişir (təkrar cavab qorunur) */
+export async function setBookRequestStatus(id: string, status: "accepted" | "declined") {
+  const updated = await db
+    .update(bookRequests)
+    .set({ status, respondedAt: new Date() })
+    .where(and(eq(bookRequests.id, id), eq(bookRequests.status, "pending")))
+    .returning({ id: bookRequests.id });
+  return updated.length > 0;
+}
+
+export async function markBookRequestSeen(id: string) {
+  await db.update(bookRequests).set({ initiatorSeenAt: new Date() }).where(eq(bookRequests.id, id));
+}
+
+export async function deleteBookRequest(id: string) {
+  await db.delete(bookRequests).where(and(eq(bookRequests.id, id), eq(bookRequests.status, "pending")));
 }

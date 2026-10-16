@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BookAcceptedCard, BookPendingCard, BookSuggestCard } from "@/components/books/BookRequestCards";
 import { ConferencesCard } from "@/components/dashboard/ConferencesCard";
 import { GrantInviteCard, SkillsNudgeCard } from "@/components/dashboard/GrantInviteCard";
 import { SurveyCard } from "@/components/dashboard/SurveyCard";
@@ -39,6 +40,12 @@ function renderCard(card: DashboardCard) {
       return <IncomingCollab key={card.key} r={card.data.request} from={card.data.other} />;
     case "collabAccepted":
       return <AcceptedCollab key={card.key} r={card.data.request} other={card.data.other} iAmSender />;
+    case "bookPending":
+      return <BookPendingCard key={card.key} data={card.data} />;
+    case "bookAccepted":
+      return <BookAcceptedCard key={card.key} data={card.data} />;
+    case "bookSuggest":
+      return <BookSuggestCard key={card.key} data={card.data} />;
   }
 }
 

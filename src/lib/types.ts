@@ -286,3 +286,52 @@ export interface CollabRequest {
   respondedAt: string | null;
   requesterSeenAt: string | null;
 }
+
+// ---------- Kitab layihələri ----------
+
+export type BookKind = "edited" | "monograph" | "textbook" | "other";
+
+export const BOOK_KINDS: Record<BookKind, { label: string; hint: string }> = {
+  edited: { label: "Kollektiv kitab (fəsillər)", hint: "Hər fəsli ayrı müəllif(lər) yazır, siz redaktorsunuz" },
+  monograph: { label: "Kollektiv monoqrafiya", hint: "Bir tədqiqat mövzusu üzrə həmmüəlliflər" },
+  textbook: { label: "Dərslik / dərs vəsaiti", hint: "Fənn üzrə tədris materialı" },
+  other: { label: "Digər", hint: "Konfrans materialları toplusu, lüğət və s." },
+};
+
+export interface BookProject {
+  id: string;
+  title: string;
+  kind: BookKind;
+  description: string;
+  topics: string[];
+  language: string;
+  publisher: string;
+  deadline: string | null;
+  status: "open" | "closed";
+  editorId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BookChapter {
+  id: string;
+  bookId: string;
+  position: number;
+  title: string;
+  description: string;
+  authorIds: string[];
+}
+
+export interface BookRequest {
+  id: string;
+  bookId: string;
+  chapterId: string | null;
+  proposedTitle: string;
+  userId: string;
+  kind: "invite" | "request";
+  message: string;
+  status: "pending" | "accepted" | "declined";
+  createdAt: string;
+  respondedAt: string | null;
+  initiatorSeenAt: string | null;
+}

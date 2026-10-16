@@ -1,5 +1,5 @@
 import { boolean, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import type { ResearchStats } from "../types";
+import type { BookKind, ResearchStats } from "../types";
 import type { AnswerValue, Audience, ConferenceFee, ConferenceFormat, ConferenceOverrides, GrantDocument, GrantGroupMode, GrantGroupStatus, GrantInviteKind, GrantInviteStatus, GrantOverrides, GrantSource, NewsCategory, NewsMeta, Question, ResultsVisibility, Role, SurveyStatus } from "../types";
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
@@ -279,4 +279,64 @@ export const collabRequests = pgTable(
     requesterSeenAt: ts("requester_seen_at"),
   },
   (t) => [index("collab_requests_to_idx").on(t.toUserId, t.status), index("collab_requests_from_idx").on(t.fromUserId)],
+);
+
+// ---------- Kitab layihələri: proposal, fəsillər, müəllif dəvət/müraciətləri ----------
+
+/** Üzvün hazırladığı kitab təklifi (proposal); hazırlayan — redaktor */
+export const bookProjects = pgTable(
+  "book_projects",
+  {
+    id: text("id").primaryKey(),
+    title: text("title").notNull(),
+    kind: text("kind").$type<BookKind>().notNull(),
+    description: text("description").notNull().default(""),
+    topics: jsonb("topics").$type<string[]>().notNull().default([]),
+    language: text("language").notNull().default(""),
+    publisher: text("publisher").notNull().default(""),
+    /** Fəsillərin təqdim olunması üçün son tarix */
+    deadline: ts("deadline"),
+    status: text("status").$type<"open" | "closed">().notNull().default("open"),
+    editorId: text("editor_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("book_projects_created_idx").on(t.createdAt)],
+);
+
+export const bookChapters = pgTable(
+  "book_chapters",
+  {
+    id: text("id").primaryKey(),
+    bookId: text("book_id").notNull().references(() => bookProjects.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    /** Fəslin müəllifləri (həmmüəlliflik mümkündür) */
+    authorIds: jsonb("author_ids").$type<string[]>().notNull().default([]),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("book_chapters_book_idx").on(t.bookId, t.position)],
+);
+
+export const bookRequests = pgTable(
+  "book_requests",
+  {
+    id: text("id").primaryKey(),
+    bookId: text("book_id").notNull().references(() => bookProjects.id, { onDelete: "cascade" }),
+    /** Mövcud fəsil; boşdursa — `proposedTitle` ilə yeni fəsil təklifi */
+    chapterId: text("chapter_id").references(() => bookChapters.id, { onDelete: "cascade" }),
+    proposedTitle: text("proposed_title").notNull().default(""),
+    /** Müəllif (namizəd) */
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    /** invite — redaktor dəvət edib; request — üzv özü qoşulmaq istəyib */
+    kind: text("kind").$type<"invite" | "request">().notNull(),
+    message: text("message").notNull().default(""),
+    status: text("status").$type<"pending" | "accepted" | "declined">().notNull().default("pending"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    respondedAt: ts("responded_at"),
+    /** Təşəbbüskar (dəvətdə redaktor, müraciətdə üzv) cavabı gördü */
+    initiatorSeenAt: ts("initiator_seen_at"),
+  },
+  (t) => [index("book_requests_book_idx").on(t.bookId), index("book_requests_user_idx").on(t.userId, t.status)],
 );
