@@ -4,7 +4,7 @@ import { facultyList } from "../faculties";
 import { skillList } from "../skills";
 import type { AnswerValue, Conference, ConferenceOverrides, Grant, GrantGroup, GrantInvitation, GrantOverrides, Invite, NewsItem, Survey, SurveyResponse, User } from "../types";
 import { db } from "./client";
-import { appState, conferences, grantGroups, grantInvitations, grants, invites, news, surveyResponses, surveys, userAvatars, users } from "./schema";
+import { appState, conferences, grantGroups, grantInvitations, grants, invites, news, stories, storyViews, surveyResponses, surveys, userAvatars, users } from "./schema";
 
 /**
  * Verilənlər bazası ilə bütün iş bu qatdan keçir.
@@ -522,4 +522,74 @@ export async function addInvitations(groupId: string, invitations: { userId: str
     .onConflictDoNothing({ target: [grantInvitations.groupId, grantInvitations.userId] })
     .returning({ id: grantInvitations.id });
   return inserted.length;
+}
+
+// ---------- Statuslar ----------
+
+/** Vaxtı keçmiş statusları fiziki olaraq silir (baxışlar cascade ilə silinir) */
+export async function deleteExpiredStories() {
+  await db.delete(stories).where(lte(stories.expiresAt, new Date()));
+}
+
+export async function countActiveStories(userId: string) {
+  const [r] = await db
+    .select({ n: count() })
+    .from(stories)
+    .where(and(eq(stories.userId, userId), gt(stories.expiresAt, new Date())));
+  return Number(r?.n ?? 0);
+}
+
+export async function insertStory(s: typeof stories.$inferInsert) {
+  await db.insert(stories).values(s);
+}
+
+/** Aktiv statuslar (şəkil məlumatı olmadan) + izləyicinin baxıb-baxmadığı */
+export async function listActiveStories(viewerId: string) {
+  const rows = await db
+    .select({
+      id: stories.id,
+      userId: stories.userId,
+      kind: stories.kind,
+      text: stories.text,
+      bg: stories.bg,
+      createdAt: stories.createdAt,
+      expiresAt: stories.expiresAt,
+    })
+    .from(stories)
+    .where(gt(stories.expiresAt, new Date()))
+    .orderBy(asc(stories.createdAt));
+  const seen = rows.length
+    ? new Set(
+        (
+          await db
+            .select({ id: storyViews.storyId })
+            .from(storyViews)
+            .where(and(eq(storyViews.userId, viewerId), inArray(storyViews.storyId, rows.map((r) => r.id))))
+        ).map((r) => r.id),
+      )
+    : new Set<string>();
+  return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString(), expiresAt: r.expiresAt.toISOString(), seen: seen.has(r.id) }));
+}
+
+export async function getStory(id: string) {
+  const [row] = await db.select().from(stories).where(and(eq(stories.id, id), gt(stories.expiresAt, new Date()))).limit(1);
+  return row ?? null;
+}
+
+export async function deleteStory(id: string) {
+  await db.delete(stories).where(eq(stories.id, id));
+}
+
+export async function markStoryViewed(storyId: string, userId: string) {
+  await db.insert(storyViews).values({ storyId, userId }).onConflictDoNothing({ target: [storyViews.storyId, storyViews.userId] });
+}
+
+/** Statusa kimlər baxıb (yalnız müəllif üçün) */
+export async function listStoryViewers(storyId: string) {
+  return db
+    .select({ id: users.id, name: users.name, avatarUpdatedAt: users.avatarUpdatedAt, viewedAt: storyViews.viewedAt })
+    .from(storyViews)
+    .innerJoin(users, eq(users.id, storyViews.userId))
+    .where(eq(storyViews.storyId, storyId))
+    .orderBy(desc(storyViews.viewedAt));
 }

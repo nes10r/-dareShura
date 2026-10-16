@@ -62,6 +62,13 @@ Superadmin şifrəsi `SUPERADMIN_PASSWORD` mühit dəyişənindən götürülür
 - Lokal test: `DATABASE_URL= npm run db:migrate && DATABASE_URL= npm run db:seed`, sonra
   `DATABASE_URL= ALLOW_PGLITE=1 npx next start` — canlı bazada istifadəçilərə bildiriş gedən test etməyin.
 
+## Statuslar (24 saat)
+
+- Dashboard-un yuxarısında status zolağı (WhatsApp/Facebook statusu kimi): mətn (rəngli fon) və ya şəkil (alt yazı ilə).
+- Şəkil brauzerdə 1080px-ə kiçildilir və bazada saxlanılır; `/api/stories/[id]/image` yalnız daxil olmuş istifadəçilərə.
+- 24 saatdan sonra görünmür və bazadan avtomatik silinir (hər status sorğusunda; cron lazım deyil).
+- Müəllif kimlərin baxdığını görür və statusu silə bilir; admin istənilən statusu silə bilir. Eyni anda ən çox 10 aktiv status.
+
 ## Dynamic Module Architecture
 
 Naviqasiya və dashboard statik deyil — hər sorğuda modul provider-lərindən generasiya olunur.

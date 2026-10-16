@@ -57,6 +57,13 @@
       "when": 1791311053262,
       "tag": "0007_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792091034840,
+      "tag": "0008_stories",
+      "breakpoints": true
     }
   ]
 }

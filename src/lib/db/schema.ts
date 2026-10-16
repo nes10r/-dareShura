@@ -200,3 +200,35 @@ export const grantInvitations = pgTable(
   },
   (t) => [uniqueIndex("grant_invitations_group_user_uq").on(t.groupId, t.userId), index("grant_invitations_user_idx").on(t.userId, t.status)],
 );
+
+// ---------- Statuslar (24 saatlıq paylaşımlar) ----------
+
+/** WhatsApp/Facebook statusu kimi: 24 saatdan sonra görünmür və avtomatik silinir */
+export const stories = pgTable(
+  "stories",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").$type<"text" | "image">().notNull(),
+    /** Mətn statusu — mətn; şəkil statusu — alt yazı */
+    text: text("text").notNull().default(""),
+    /** Mətn statusunun fon rəngi (açar) */
+    bg: text("bg").notNull().default("brand"),
+    imageMime: text("image_mime"),
+    /** base64 (brauzerdə 1080px-ə kiçildilmiş) */
+    imageData: text("image_data"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    expiresAt: ts("expires_at").notNull(),
+  },
+  (t) => [index("stories_expires_idx").on(t.expiresAt), index("stories_user_idx").on(t.userId)],
+);
+
+export const storyViews = pgTable(
+  "story_views",
+  {
+    storyId: text("story_id").notNull().references(() => stories.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    viewedAt: ts("viewed_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("story_views_uq").on(t.storyId, t.userId)],
+);

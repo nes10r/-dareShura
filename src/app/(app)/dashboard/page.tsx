@@ -5,10 +5,12 @@ import { GrantInviteCard, SkillsNudgeCard } from "@/components/dashboard/GrantIn
 import { SurveyCard } from "@/components/dashboard/SurveyCard";
 import { SurveyPrompt } from "@/components/dashboard/SurveyPrompt";
 import { Icon } from "@/components/Icon";
-import { requireUser } from "@/lib/auth";
+import { StoriesRail } from "@/components/stories/StoriesRail";
+import { hasPermission, requireUser } from "@/lib/auth";
 import { listPublishedNews } from "@/lib/db/repo";
-import { daysLeftLabel, formatDate } from "@/lib/format";
+import { avatarUrl, daysLeftLabel, formatDate } from "@/lib/format";
 import { resolveModules } from "@/lib/modules/registry";
+import { getStoryGroups } from "@/lib/stories-server";
 import type { DashboardCard, IconName } from "@/lib/modules/types";
 import { ROLE_LABELS } from "@/lib/types";
 
@@ -44,7 +46,7 @@ const QUICK_LINKS: { icon: IconName; label: string; text: string; href?: string 
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const [{ cards, modules }, news] = await Promise.all([resolveModules(user), listPublishedNews(3)]);
+  const [{ cards, modules }, news, storyGroups] = await Promise.all([resolveModules(user), listPublishedNews(3), getStoryGroups(user)]);
 
   const surveyModule = modules.find((m) => m.key === "survey");
   const firstPending = cards.find((c) => c.kind === "survey" && c.data.state === "pending" && !c.data.optional);
@@ -56,6 +58,15 @@ export default async function DashboardPage() {
         <p className="text-sm text-muted">{greeting()},</p>
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{firstName}</h1>
       </header>
+
+      {/* Statuslar: 24 saatlıq paylaşımlar */}
+      <div className="mt-5">
+        <StoriesRail
+          groups={storyGroups}
+          me={{ id: user.id, name: user.name, avatar: avatarUrl(user) }}
+          canModerate={hasPermission(user, "news.manage")}
+        />
+      </div>
 
       {/* Dinamik modullar: yalnız bu an istifadəçi üçün aktual olanlar */}
       {cards.length > 0 ? (
