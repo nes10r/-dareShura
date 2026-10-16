@@ -78,6 +78,13 @@
       "when": 1792175891612,
       "tag": "0010_book_projects",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792178006364,
+      "tag": "0011_journals",
+      "breakpoints": true
     }
   ]
 }

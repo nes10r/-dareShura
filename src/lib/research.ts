@@ -38,13 +38,13 @@ export function normalizeScholarUrl(input: string): string | null {
   }
 }
 
-const API = "https://api.openalex.org";
+export const API = "https://api.openalex.org";
 const withKey = (url: string) => {
   const key = process.env.OPENALEX_API_KEY;
   return key ? `${url}${url.includes("?") ? "&" : "?"}api_key=${encodeURIComponent(key)}` : url;
 };
 
-async function getJson<T>(url: string): Promise<T> {
+export async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(withKey(url), {
     headers: { "User-Agent": "UNEC-GAS-Platforma/1.0" },
     signal: AbortSignal.timeout(15_000),

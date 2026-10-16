@@ -1,5 +1,5 @@
 import { boolean, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import type { BookKind, ResearchStats } from "../types";
+import type { BookKind, PublishSpeed, ResearchStats, ScopusInfo } from "../types";
 import type { AnswerValue, Audience, ConferenceFee, ConferenceFormat, ConferenceOverrides, GrantDocument, GrantGroupMode, GrantGroupStatus, GrantInviteKind, GrantInviteStatus, GrantOverrides, GrantSource, NewsCategory, NewsMeta, Question, ResultsVisibility, Role, SurveyStatus } from "../types";
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
@@ -339,4 +339,57 @@ export const bookRequests = pgTable(
     initiatorSeenAt: ts("initiator_seen_at"),
   },
   (t) => [index("book_requests_book_idx").on(t.bookId), index("book_requests_user_idx").on(t.userId, t.status)],
+);
+
+// ---------- Jurnal tapmaq köməkçisi ----------
+
+/** OpenAlex jurnal məlumatı + Scopus göstəriciləri + nəşr sürəti (keş) */
+export const journals = pgTable("journals", {
+  /** OpenAlex mənbə ID-si (S…) */
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  issnL: text("issn_l"),
+  issn: jsonb("issn").$type<string[]>().notNull().default([]),
+  publisher: text("publisher"),
+  homepage: text("homepage"),
+  isOa: boolean("is_oa").notNull().default(false),
+  inDoaj: boolean("in_doaj").notNull().default(false),
+  apcUsd: integer("apc_usd"),
+  hIndex: integer("h_index"),
+  /** 2 illik orta istinad (Impact Factor-a bənzər) */
+  meanCitedness: text("mean_citedness"),
+  worksCount: integer("works_count"),
+  listedIn: jsonb("listed_in").$type<string[]>().notNull().default([]),
+  /** Nəşriyyat saytında jurnalın xüsusi buraxılışlar/çağırışlar səhifəsi (məlum nəşriyyatlar üçün) */
+  callsUrl: text("calls_url"),
+  scopus: jsonb("scopus").$type<ScopusInfo | null>(),
+  speed: jsonb("speed").$type<PublishSpeed | null>(),
+  updatedAt: ts("updated_at").notNull().defaultNow(),
+});
+
+/** Mövzu axtarışının nəticəsi (OpenAlex büdcəsinə qənaət üçün keşlənir) */
+export const journalSearches = pgTable("journal_searches", {
+  key: text("key").primaryKey(),
+  results: jsonb("results").$type<{ id: string; count: number }[]>().notNull(),
+  total: integer("total").notNull().default(0),
+  createdAt: ts("created_at").notNull().defaultNow(),
+});
+
+/** Xüsusi buraxılışlara məqalə çağırışları — üzvlər paylaşır, son tarix keçəndə gizlənir */
+export const journalCalls = pgTable(
+  "journal_calls",
+  {
+    id: text("id").primaryKey(),
+    journalId: text("journal_id"),
+    journalTitle: text("journal_title").notNull(),
+    title: text("title").notNull(),
+    url: text("url").notNull(),
+    note: text("note").notNull().default(""),
+    opensAt: ts("opens_at"),
+    deadline: ts("deadline"),
+    topics: jsonb("topics").$type<string[]>().notNull().default([]),
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("journal_calls_deadline_idx").on(t.deadline)],
 );

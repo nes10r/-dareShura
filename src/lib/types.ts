@@ -335,3 +335,63 @@ export interface BookRequest {
   respondedAt: string | null;
   initiatorSeenAt: string | null;
 }
+
+// ---------- Jurnallar ----------
+
+export interface ScopusInfo {
+  indexed: boolean;
+  /** Scopus-dan çıxarılıbsa — son əhatə ili */
+  discontinuedAfter?: number | null;
+  citeScore?: number | null;
+  citeScoreYear?: number | null;
+  sjr?: number | null;
+  /** CiteScore faizinə görə ən yaxşı kvartil (Q1–Q4) */
+  quartile?: 1 | 2 | 3 | 4 | null;
+  subjects?: string[];
+  sourceUrl?: string | null;
+  checkedAt: string;
+}
+
+export interface PublishSpeed {
+  /** Hesablamada istifadə olunan məqalələr */
+  sample: number;
+  /** Göndərilmədən qəbula qədər (gün, median) */
+  acceptDays: number | null;
+  /** Qəbuldan onlayn nəşrə qədər (gün, median) */
+  publishDays: number | null;
+  checkedAt: string;
+}
+
+export interface Journal {
+  id: string;
+  title: string;
+  issnL: string | null;
+  issn: string[];
+  publisher: string | null;
+  homepage: string | null;
+  isOa: boolean;
+  inDoaj: boolean;
+  apcUsd: number | null;
+  hIndex: number | null;
+  meanCitedness: number | null;
+  worksCount: number | null;
+  listedIn: string[];
+  callsUrl: string | null;
+  scopus: ScopusInfo | null;
+  speed: PublishSpeed | null;
+  updatedAt: string;
+}
+
+export interface JournalCall {
+  id: string;
+  journalId: string | null;
+  journalTitle: string;
+  title: string;
+  url: string;
+  note: string;
+  opensAt: string | null;
+  deadline: string | null;
+  topics: string[];
+  createdBy: string | null;
+  createdAt: string;
+}

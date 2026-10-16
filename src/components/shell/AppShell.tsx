@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { Avatar } from "@/components/ui/Avatar";
 import { Logo } from "@/components/ui/Logo";
+import { Sheet } from "@/components/ui/Sheet";
 import { logout } from "@/app/login/actions";
 import type { NavEntry } from "@/lib/modules/types";
 
@@ -39,13 +41,22 @@ export function AppShell({ user, nav, children }: { user: ShellUser; nav: NavEnt
   const dynamicMain = nav.filter((n) => n.section === "main");
   const admin = nav.filter((n) => n.section === "admin");
   const main = [HOME, ...dynamicMain, PROFILE];
-  // Mobil alt naviqasiya: əsas bəndlər + (varsa) idarəetmə, profil sonda
-  const mobile: NavEntry[] = [
+  // Mobil alt naviqasiya: əsas bəndlər + (varsa) idarəetmə, profil sonda.
+  // 5-dən çox bənd olduqda ilk 4-ü görünür, qalanları "Daha çox" panelində.
+  const allMobile: NavEntry[] = [
     HOME,
     ...dynamicMain,
     ...(admin.length ? [{ key: "admin", label: "İdarəetmə", href: "/admin", icon: "settings", section: "admin", order: 900 } as NavEntry] : []),
     PROFILE,
-  ].filter((item, _i, all) => !(item.key === "profile" && all.length > 5));
+  ];
+  const overflow = allMobile.length > 5;
+  const mobile = overflow ? allMobile.slice(0, 4) : allMobile;
+  const more = overflow ? allMobile.slice(4) : [];
+  const moreActive = more.some((i) => isActive(pathname, i.href));
+  const moreBadge = more.reduce((n, i) => n + (i.badge ?? 0), 0);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const closeMore = useCallback(() => setMoreOpen(false), []);
+  useEffect(() => setMoreOpen(false), [pathname]);
 
   return (
     <div className="min-h-dvh lg:flex">
@@ -167,8 +178,51 @@ export function AppShell({ user, nav, children }: { user: ShellUser; nav: NavEnt
               </li>
             );
           })}
+          {overflow && (
+            <li className="flex-1">
+              <button
+                type="button"
+                onClick={() => setMoreOpen(true)}
+                aria-expanded={moreOpen}
+                className={`relative flex h-16 w-full flex-col items-center justify-center gap-1 text-[11px] font-medium transition ${moreActive ? "text-brand-700" : "text-slate-500"}`}
+              >
+                {moreActive && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-brand-700" />}
+                <span className="relative">
+                  <Icon name="template" className="size-6" />
+                  <Badge count={moreBadge} className="absolute -right-3 -top-1.5 ring-2 ring-white" />
+                </span>
+                Daha çox
+              </button>
+            </li>
+          )}
         </ul>
       </nav>
+
+      <Sheet open={moreOpen} onClose={closeMore} title="Bölmələr">
+        <ul className="mt-4 grid grid-cols-3 gap-2">
+          {more.map((item) => {
+            const active = isActive(pathname, item.href);
+            return (
+              <li key={item.key}>
+                <Link
+                  href={item.href}
+                  onClick={closeMore}
+                  aria-current={active ? "page" : undefined}
+                  className={`relative flex h-24 flex-col items-center justify-center gap-2 rounded-2xl text-sm font-medium ring-1 transition ${
+                    active ? "bg-brand-50 text-brand-700 ring-brand-200" : "bg-white text-slate-700 ring-line hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="relative">
+                    {item.icon && <Icon name={item.icon} className="size-7" />}
+                    <Badge count={item.badge} className="absolute -right-3 -top-1.5 ring-2 ring-white" />
+                  </span>
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </Sheet>
     </div>
   );
 }

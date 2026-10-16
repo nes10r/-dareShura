@@ -21,7 +21,7 @@ export interface ModuleContext {
 export type IconName =
   | "home" | "survey" | "user" | "settings" | "chart" | "plus" | "file"
   | "calendar" | "bell" | "check" | "clock" | "logout" | "arrow-right" | "x"
-  | "chevron-left" | "chevron-right" | "template" | "megaphone" | "lock" | "users" | "newspaper" | "pin" | "link" | "video" | "phone" | "briefcase" | "pause" | "play" | "image" | "type" | "book";
+  | "chevron-left" | "chevron-right" | "template" | "megaphone" | "lock" | "users" | "newspaper" | "pin" | "link" | "video" | "phone" | "briefcase" | "pause" | "play" | "image" | "type" | "book" | "search";
 
 export interface NavLink {
   label: string;
@@ -46,7 +46,12 @@ export type DashboardCard =
   | { kind: "skillsNudge"; key: string; priority: number; data: { grantCount: number } }
   | { kind: "collabIncoming" | "collabAccepted"; key: string; priority: number; data: { request: CollabRequest; other: CollabCardPerson } }
   | { kind: "bookPending" | "bookAccepted"; key: string; priority: number; data: BookRequestCardData }
-  | { kind: "bookSuggest"; key: string; priority: number; data: BookSuggestCardData };
+  | { kind: "bookSuggest"; key: string; priority: number; data: BookSuggestCardData }
+  | { kind: "journalCalls"; key: string; priority: number; data: JournalCallsCardData };
+
+export interface JournalCallsCardData {
+  items: { id: string; title: string; journal: string; url: string; deadline: string; matched: string[] }[];
+}
 
 export interface BookRequestCardData {
   request: BookRequest;

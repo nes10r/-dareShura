@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BookAcceptedCard, BookPendingCard, BookSuggestCard } from "@/components/books/BookRequestCards";
+import { JournalCallsCard } from "@/components/journals/JournalCallsCard";
 import { ConferencesCard } from "@/components/dashboard/ConferencesCard";
 import { GrantInviteCard, SkillsNudgeCard } from "@/components/dashboard/GrantInviteCard";
 import { SurveyCard } from "@/components/dashboard/SurveyCard";
@@ -46,6 +47,8 @@ function renderCard(card: DashboardCard) {
       return <BookAcceptedCard key={card.key} data={card.data} />;
     case "bookSuggest":
       return <BookSuggestCard key={card.key} data={card.data} />;
+    case "journalCalls":
+      return <JournalCallsCard key={card.key} data={card.data} />;
   }
 }
 

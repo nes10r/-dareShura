@@ -2,9 +2,9 @@ import { randomBytes } from "node:crypto";
 import { and, asc, count, desc, eq, gt, inArray, isNull, lte, or } from "drizzle-orm";
 import { facultyList } from "../faculties";
 import { skillList } from "../skills";
-import type { AnswerValue, BookChapter, BookProject, BookRequest, CollabRequest, Conference, ConferenceOverrides, Grant, GrantGroup, GrantInvitation, GrantOverrides, Invite, NewsItem, Publication, ResearchStats, Survey, SurveyResponse, User } from "../types";
+import type { AnswerValue, BookChapter, BookProject, BookRequest, CollabRequest, Journal, JournalCall, Conference, ConferenceOverrides, Grant, GrantGroup, GrantInvitation, GrantOverrides, Invite, NewsItem, Publication, ResearchStats, Survey, SurveyResponse, User } from "../types";
 import { db } from "./client";
-import { appState, bookChapters, bookProjects, bookRequests, collabRequests, conferences, grantGroups, grantInvitations, grants, invites, news, stories, storyViews, surveyResponses, surveys, userAvatars, userPublications, users } from "./schema";
+import { appState, bookChapters, bookProjects, bookRequests, collabRequests, conferences, grantGroups, grantInvitations, grants, invites, journalCalls, journals, journalSearches, news, stories, storyViews, surveyResponses, surveys, userAvatars, userPublications, users } from "./schema";
 
 /**
  * Verilənlər bazası ilə bütün iş bu qatdan keçir.
@@ -783,4 +783,85 @@ export async function markBookRequestSeen(id: string) {
 
 export async function deleteBookRequest(id: string) {
   await db.delete(bookRequests).where(and(eq(bookRequests.id, id), eq(bookRequests.status, "pending")));
+}
+
+// ---------- Jurnallar ----------
+
+type JournalRow = typeof journals.$inferSelect;
+const toJournal = (r: JournalRow): Journal => ({
+  ...r,
+  issn: r.issn ?? [],
+  listedIn: r.listedIn ?? [],
+  meanCitedness: r.meanCitedness == null ? null : Number(r.meanCitedness),
+  updatedAt: r.updatedAt.toISOString(),
+});
+
+export type JournalUpsert = Omit<Journal, "scopus" | "speed" | "updatedAt">;
+
+/** OpenAlex məlumatını yeniləyir; Scopus və sürət keşinə toxunmur */
+export async function upsertJournals(list: JournalUpsert[]) {
+  for (const j of list) {
+    const row = { ...j, meanCitedness: j.meanCitedness == null ? null : String(j.meanCitedness), updatedAt: new Date() };
+    await db.insert(journals).values(row).onConflictDoUpdate({ target: journals.id, set: row });
+  }
+}
+
+export async function getJournals(ids: string[]) {
+  if (!ids.length) return [];
+  return (await db.select().from(journals).where(inArray(journals.id, ids))).map(toJournal);
+}
+
+export async function setJournalScopus(id: string, scopus: Journal["scopus"]) {
+  await db.update(journals).set({ scopus }).where(eq(journals.id, id));
+}
+
+export async function setJournalSpeed(id: string, speed: Journal["speed"]) {
+  await db.update(journals).set({ speed }).where(eq(journals.id, id));
+}
+
+export async function getJournalSearch(key: string) {
+  const [row] = await db.select().from(journalSearches).where(eq(journalSearches.key, key)).limit(1);
+  return row ?? null;
+}
+
+export async function saveJournalSearch(key: string, results: { id: string; count: number }[], total: number) {
+  const row = { key, results, total, createdAt: new Date() };
+  await db.insert(journalSearches).values(row).onConflictDoUpdate({ target: journalSearches.key, set: row });
+}
+
+type CallRow = typeof journalCalls.$inferSelect;
+const toCall = (r: CallRow): JournalCall => ({
+  ...r,
+  opensAt: iso(r.opensAt),
+  deadline: iso(r.deadline),
+  topics: r.topics ?? [],
+  createdAt: r.createdAt.toISOString(),
+});
+
+export async function insertCall(c: Omit<JournalCall, "id" | "createdAt">) {
+  await db.insert(journalCalls).values({ ...c, id: newId("jc"), opensAt: date(c.opensAt), deadline: date(c.deadline) });
+}
+
+/** Aktiv çağırışlar: son tarixi keçməyənlər (son tarixi bilinməyənlər — 120 gün ərzində əlavə olunmuşsa) */
+export async function listActiveCalls(now = new Date()) {
+  const rows = await db
+    .select()
+    .from(journalCalls)
+    .where(or(gt(journalCalls.deadline, now), and(isNull(journalCalls.deadline), gt(journalCalls.createdAt, new Date(now.getTime() - 120 * 86_400_000)))))
+    .orderBy(asc(journalCalls.deadline));
+  return rows.map(toCall);
+}
+
+export async function getCall(id: string) {
+  const [row] = await db.select().from(journalCalls).where(eq(journalCalls.id, id)).limit(1);
+  return row ? toCall(row) : null;
+}
+
+export async function deleteCall(id: string) {
+  await db.delete(journalCalls).where(eq(journalCalls.id, id));
+}
+
+/** Son tarixi 30 gündən çox əvvəl keçmiş çağırışlar silinir */
+export async function purgeOldCalls(now = new Date()) {
+  await db.delete(journalCalls).where(lte(journalCalls.deadline, new Date(now.getTime() - 30 * 86_400_000)));
 }

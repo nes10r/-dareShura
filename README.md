@@ -83,6 +83,13 @@ Superadmin şifrəsi `SUPERADMIN_PASSWORD` mühit dəyişənindən götürülür
 - Bildirişlər dashboard-da və "Kitablar" menyusunda nişanla; sahəsi uyğun üzvlərə yeni kitablar 14 gün ərzində təklif kartı kimi göstərilir.
 - Komandanın e-poçtları yalnız redaktor və müəlliflərə görünür. Redaktor müəllif qəbulunu bağlaya, fəsil/müəllif çıxara bilər; admin moderasiya üçün silə bilər.
 
+## Jurnal tapmaq köməkçisi
+
+- `/jurnallar`: məqalənin mövzusu (ingiliscə daha dəqiq) → son 3 ildə bu mövzuda ən çox məqalə dərc edən jurnallar (OpenAlex `group_by`). Nəticə 7 gün, jurnal göstəriciləri 30 gün bazada keşlənir.
+- Hər jurnal: Scopus statusu, CiteScore və kvartil (`SCOPUS_API_KEY` varsa Scopus Serial Title API; yoxdursa Scimago linki), WoS — Clarivate Master Journal List linki, açıq giriş/DOAJ, APC, h-indeks, 2 illik orta istinad.
+- Nəşr sürəti: Crossref-dəki son 60 məqalənin göndərilmə/qəbul/onlayn tarixlərinin medianı. Springer, Wiley, Taylor & Francis paylaşır; Elsevier və MDPI paylaşmır.
+- `/jurnallar/cagirislar`: xüsusi buraxılış çağırışları lenti. Nəşriyyat saytları serverdən avtomatik oxumağı bloklayır (Elsevier, MDPI, Wiley — 403, Springer — JS yoxlaması), ona görə çağırışları üzvlər paylaşır; jurnal kartında nəşriyyatın xüsusi buraxılışlar səhifəsinə link var. Son tarix keçəndə gizlənir, sahəsi uyğun üzvlərə dashboard-da göstərilir.
+
 ## Dynamic Module Architecture
 
 Naviqasiya və dashboard statik deyil — hər sorğuda modul provider-lərindən generasiya olunur.

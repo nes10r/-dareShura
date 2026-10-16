@@ -3,6 +3,7 @@ import type { User } from "../types";
 import { booksModule } from "./providers/books";
 import { conferencesAdminModule, conferencesModule } from "./providers/conferences";
 import { grantsAdminModule, grantsModule } from "./providers/grants";
+import { journalsModule } from "./providers/journals";
 import { newsAdminModule } from "./providers/news";
 import { researchersModule } from "./providers/researchers";
 import { surveyAdminModule, surveyModule } from "./providers/survey";
@@ -13,7 +14,7 @@ import type { DashboardCard, ModuleProvider, ModuleSummary, NavEntry } from "./t
  * Qeydiyyatdan keçmiş modullar. Gələcək modullar (iclas, tapşırıq, səsvermə, qərar)
  * eyni interfeysi implement edib bura əlavə olunacaq.
  */
-const PROVIDERS: ModuleProvider[] = [surveyModule, surveyAdminModule, newsAdminModule, conferencesModule, conferencesAdminModule, grantsModule, grantsAdminModule, researchersModule, booksModule, inviteAdminModule, usersAdminModule];
+const PROVIDERS: ModuleProvider[] = [surveyModule, surveyAdminModule, newsAdminModule, conferencesModule, conferencesAdminModule, grantsModule, grantsAdminModule, researchersModule, booksModule, journalsModule, inviteAdminModule, usersAdminModule];
 
 export interface ResolvedModules {
   modules: ModuleSummary[];
