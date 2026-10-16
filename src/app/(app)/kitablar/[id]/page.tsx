@@ -42,7 +42,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
   const busyIds = new Set(requests.filter((r) => r.status === "pending").map((r) => r.userId));
   const people: PersonOption[] = isEditor
     ? users
-        .filter((u) => u.id !== me.id)
+        .filter((u) => u.id !== me.id && u.role !== "SUPER_ADMIN")
         .map((u) => ({
           id: u.id,
           name: u.name,

@@ -16,8 +16,10 @@ export default async function ResearchersPage({ searchParams }: { searchParams: 
   const [users, requests] = await Promise.all([listUsers(), listCollabRequests(user.id)]);
   const byId = new Map(users.map((u) => [u.id, u]));
 
-  const hits = searchResearchers(users, { q, skill: sahe, openOnly });
-  const skills = topSkills(users);
+  // Sistem inzibatçısı (superadmin) tədqiqatçı kataloqunda göstərilmir
+  const researchers = users.filter((u) => u.role !== "SUPER_ADMIN");
+  const hits = searchResearchers(researchers, { q, skill: sahe, openOnly });
+  const skills = topSkills(researchers);
   const filtering = !!(q || sahe || openOnly);
 
   const incoming = requests.filter((r) => r.toUserId === user.id && r.status === "pending");
