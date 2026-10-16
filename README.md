@@ -69,6 +69,13 @@ Superadmin şifrəsi `SUPERADMIN_PASSWORD` mühit dəyişənindən götürülür
 - 24 saatdan sonra görünmür və bazadan avtomatik silinir (hər status sorğusunda; cron lazım deyil).
 - Müəllif kimlərin baxdığını görür və statusu silə bilir; admin istənilən statusu silə bilir. Eyni anda ən çox 10 aktiv status.
 
+## Tədqiqatçılar və əməkdaşlıq
+
+- Hər üzvün açıq elmi profili (`/tedqiqatcilar/[id]`): elmi maraqlar (bacarıqlar), qısa bio, ORCID, Google Scholar, "Əməkdaşlığa açığam" nişanı. Redaktə — `/profile#elmi-profil`.
+- Nəşrlər əl ilə daxil edilmir: ORCID ilə pulsuz [OpenAlex](https://openalex.org) API-dən avtomatik gəlir (nəşr, istinad, h-indeks, i10; ən çox 100 nəşr). ORCID dəyişəndə dərhal, sonra profil açılanda həftədə bir dəfə fonda yenilənir. İstəyə görə `OPENALEX_API_KEY`.
+- Kataloq (`/tedqiqatcilar`): sahə/ad/fakültə üzrə axtarış, populyar sahələr və "Əməkdaşlığa açıq" filtri.
+- "Birgə işləmək təklifi": mövzu + qısa mesaj. Alan tərəf dashboard-da kart və nişan görür; qəbul edildikdən sonra e-poçtlar qarşılıqlı açılır. Eyni anda ən çox 5 cavabsız təklif.
+
 ## Dynamic Module Architecture
 
 Naviqasiya və dashboard statik deyil — hər sorğuda modul provider-lərindən generasiya olunur.

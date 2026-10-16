@@ -1,4 +1,5 @@
 import { boolean, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import type { ResearchStats } from "../types";
 import type { AnswerValue, Audience, ConferenceFee, ConferenceFormat, ConferenceOverrides, GrantDocument, GrantGroupMode, GrantGroupStatus, GrantInviteKind, GrantInviteStatus, GrantOverrides, GrantSource, NewsCategory, NewsMeta, Question, ResultsVisibility, Role, SurveyStatus } from "../types";
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
@@ -18,6 +19,15 @@ export const users = pgTable("users", {
   avatarUpdatedAt: ts("avatar_updated_at"),
   /** Elmi maraq və bacarıqlar (teqlər) — qrant işçi qruplarına uyğun dəvət üçün */
   skills: jsonb("skills").$type<string[]>().notNull().default([]),
+  // ---- Elmi profil ----
+  bio: text("bio").notNull().default(""),
+  orcid: text("orcid"),
+  scholarUrl: text("scholar_url"),
+  openToCollab: boolean("open_to_collab").notNull().default(false),
+  /** OpenAlex müəllif id-si və göstəriciləri (ORCID ilə avtomatik) */
+  openalexId: text("openalex_id"),
+  researchStats: jsonb("research_stats").$type<ResearchStats>(),
+  pubsSyncedAt: ts("pubs_synced_at"),
   createdAt: ts("created_at").notNull().defaultNow(),
 });
 
@@ -231,4 +241,42 @@ export const storyViews = pgTable(
     viewedAt: ts("viewed_at").notNull().defaultNow(),
   },
   (t) => [uniqueIndex("story_views_uq").on(t.storyId, t.userId)],
+);
+
+// ---------- Elmi profil: nəşrlər və əməkdaşlıq təklifləri ----------
+
+/** OpenAlex-dən ORCID ilə avtomatik çəkilən nəşrlər (əl ilə daxil edilmir) */
+export const userPublications = pgTable(
+  "user_publications",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    workId: text("work_id").notNull(),
+    title: text("title").notNull(),
+    year: integer("year"),
+    venue: text("venue"),
+    doi: text("doi"),
+    url: text("url"),
+    type: text("type"),
+    citedBy: integer("cited_by").notNull().default(0),
+    openAccess: boolean("open_access").notNull().default(false),
+  },
+  (t) => [index("user_publications_user_idx").on(t.userId, t.year)],
+);
+
+export const collabRequests = pgTable(
+  "collab_requests",
+  {
+    id: text("id").primaryKey(),
+    fromUserId: text("from_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    toUserId: text("to_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    topic: text("topic").notNull(),
+    message: text("message").notNull().default(""),
+    status: text("status").$type<"pending" | "accepted" | "declined">().notNull().default("pending"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    respondedAt: ts("responded_at"),
+    /** Təklif göndərən cavabı gördü (dashboard kartı gizlənir) */
+    requesterSeenAt: ts("requester_seen_at"),
+  },
+  (t) => [index("collab_requests_to_idx").on(t.toUserId, t.status), index("collab_requests_from_idx").on(t.fromUserId)],
 );

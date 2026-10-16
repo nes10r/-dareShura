@@ -12,6 +12,13 @@ export interface User {
   inviteId?: string | null;
   avatarUpdatedAt?: string | null;
   skills?: string[];
+  bio?: string;
+  orcid?: string | null;
+  scholarUrl?: string | null;
+  openToCollab?: boolean;
+  openalexId?: string | null;
+  researchStats?: ResearchStats | null;
+  pubsSyncedAt?: string | null;
   createdAt: string;
 }
 
@@ -244,4 +251,38 @@ export interface GrantInvitation {
   matchedSkills: string[];
   createdAt: string;
   respondedAt: string | null;
+}
+
+// ---------- Elmi profil ----------
+
+export interface ResearchStats {
+  works: number;
+  citations: number;
+  hIndex: number;
+  i10Index: number;
+}
+
+export interface Publication {
+  id: string;
+  workId: string;
+  title: string;
+  year: number | null;
+  venue: string | null;
+  doi: string | null;
+  url: string | null;
+  type: string | null;
+  citedBy: number;
+  openAccess: boolean;
+}
+
+export interface CollabRequest {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  topic: string;
+  message: string;
+  status: "pending" | "accepted" | "declined";
+  createdAt: string;
+  respondedAt: string | null;
+  requesterSeenAt: string | null;
 }

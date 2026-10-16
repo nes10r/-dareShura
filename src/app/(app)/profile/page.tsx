@@ -2,17 +2,18 @@ import type { Metadata } from "next";
 import { logout } from "@/app/login/actions";
 import { Icon } from "@/components/Icon";
 import { requireUser } from "@/lib/auth";
-import { listAllSkills, listFaculties } from "@/lib/db/repo";
+import { listAllSkills, listFaculties, listPublications } from "@/lib/db/repo";
 import { avatarUrl } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/types";
 import { AvatarUploader } from "./AvatarUploader";
+import { ResearchProfileForm } from "./ResearchProfileForm";
 import { PasswordForm, ProfileForm, SkillsForm } from "./ProfileForms";
 
 export const metadata: Metadata = { title: "Profil" };
 
 export default async function ProfilePage() {
   const user = await requireUser();
-  const [faculties, allSkills] = await Promise.all([listFaculties(), listAllSkills()]);
+  const [faculties, allSkills, pubs] = await Promise.all([listFaculties(), listAllSkills(), listPublications(user.id)]);
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-6 sm:px-6 lg:pt-10">
@@ -28,6 +29,17 @@ export default async function ProfilePage() {
       <section className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-line sm:p-5">
         <h2 className="mb-4 font-semibold">Şəxsi məlumatlar</h2>
         <ProfileForm user={{ name: user.name, faculty: user.faculty, position: user.position, academicTitle: user.academicTitle }} faculties={faculties} />
+      </section>
+
+      <section id="elmi-profil" className="mt-4 scroll-mt-20 rounded-2xl bg-white p-4 ring-1 ring-line sm:p-5">
+        <h2 className="font-semibold">Elmi profil</h2>
+        <p className="mb-4 mt-1 text-sm text-muted">"Tədqiqatçılar" kataloqunda həmkarlarınız sizi bu məlumatlarla tapacaq.</p>
+        <ResearchProfileForm
+          userId={user.id}
+          initial={{ bio: user.bio ?? "", orcid: user.orcid ?? "", scholarUrl: user.scholarUrl ?? "", openToCollab: !!user.openToCollab }}
+          pubCount={pubs.length}
+          syncedAt={user.pubsSyncedAt ?? null}
+        />
       </section>
 
       <section id="bacariqlar" className="mt-4 scroll-mt-20 rounded-2xl bg-white p-4 ring-1 ring-line sm:p-5">

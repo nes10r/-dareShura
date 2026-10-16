@@ -5,6 +5,7 @@ import { GrantInviteCard, SkillsNudgeCard } from "@/components/dashboard/GrantIn
 import { SurveyCard } from "@/components/dashboard/SurveyCard";
 import { SurveyPrompt } from "@/components/dashboard/SurveyPrompt";
 import { Icon } from "@/components/Icon";
+import { AcceptedCollab, IncomingCollab } from "@/components/research/CollabRequests";
 import { StoriesRail } from "@/components/stories/StoriesRail";
 import { hasPermission, requireUser } from "@/lib/auth";
 import { listPublishedNews } from "@/lib/db/repo";
@@ -34,6 +35,10 @@ function renderCard(card: DashboardCard) {
       return <GrantInviteCard key={card.key} data={card.data} />;
     case "skillsNudge":
       return <SkillsNudgeCard key={card.key} grantCount={card.data.grantCount} />;
+    case "collabIncoming":
+      return <IncomingCollab key={card.key} r={card.data.request} from={card.data.other} />;
+    case "collabAccepted":
+      return <AcceptedCollab key={card.key} r={card.data.request} other={card.data.other} iAmSender />;
   }
 }
 

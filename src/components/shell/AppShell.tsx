@@ -45,7 +45,7 @@ export function AppShell({ user, nav, children }: { user: ShellUser; nav: NavEnt
     ...dynamicMain,
     ...(admin.length ? [{ key: "admin", label: "İdarəetmə", href: "/admin", icon: "settings", section: "admin", order: 900 } as NavEntry] : []),
     PROFILE,
-  ];
+  ].filter((item, _i, all) => !(item.key === "profile" && all.length > 5));
 
   return (
     <div className="min-h-dvh lg:flex">

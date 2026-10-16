@@ -1,10 +1,10 @@
 import { randomBytes } from "node:crypto";
-import { and, asc, count, desc, eq, gt, inArray, isNull, lte } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, isNull, lte, or } from "drizzle-orm";
 import { facultyList } from "../faculties";
 import { skillList } from "../skills";
-import type { AnswerValue, Conference, ConferenceOverrides, Grant, GrantGroup, GrantInvitation, GrantOverrides, Invite, NewsItem, Survey, SurveyResponse, User } from "../types";
+import type { AnswerValue, CollabRequest, Conference, ConferenceOverrides, Grant, GrantGroup, GrantInvitation, GrantOverrides, Invite, NewsItem, Publication, ResearchStats, Survey, SurveyResponse, User } from "../types";
 import { db } from "./client";
-import { appState, conferences, grantGroups, grantInvitations, grants, invites, news, stories, storyViews, surveyResponses, surveys, userAvatars, users } from "./schema";
+import { appState, collabRequests, conferences, grantGroups, grantInvitations, grants, invites, news, stories, storyViews, surveyResponses, surveys, userAvatars, userPublications, users } from "./schema";
 
 /**
  * Verilənlər bazası ilə bütün iş bu qatdan keçir.
@@ -21,7 +21,13 @@ export function newId(prefix: string) {
 // ---------- Users ----------
 
 type UserRow = typeof users.$inferSelect;
-const toUser = (r: UserRow): User => ({ ...r, skills: r.skills ?? [], avatarUpdatedAt: iso(r.avatarUpdatedAt), createdAt: r.createdAt.toISOString() });
+const toUser = (r: UserRow): User => ({
+  ...r,
+  skills: r.skills ?? [],
+  avatarUpdatedAt: iso(r.avatarUpdatedAt),
+  pubsSyncedAt: iso(r.pubsSyncedAt),
+  createdAt: r.createdAt.toISOString(),
+});
 
 export async function findUserById(id: string) {
   const [row] = await db.select().from(users).where(eq(users.id, id)).limit(1);
@@ -189,7 +195,7 @@ export async function deleteNews(id: string) {
 export async function insertUser(user: User) {
   const inserted = await db
     .insert(users)
-    .values({ ...user, email: user.email.toLowerCase(), avatarUpdatedAt: null, createdAt: new Date(user.createdAt) })
+    .values({ ...user, email: user.email.toLowerCase(), avatarUpdatedAt: null, pubsSyncedAt: null, createdAt: new Date(user.createdAt) })
     .onConflictDoNothing({ target: users.email })
     .returning({ id: users.id });
   return inserted.length > 0;
@@ -592,4 +598,81 @@ export async function listStoryViewers(storyId: string) {
     .innerJoin(users, eq(users.id, storyViews.userId))
     .where(eq(storyViews.storyId, storyId))
     .orderBy(desc(storyViews.viewedAt));
+}
+
+// ---------- Elmi profil ----------
+
+export async function updateResearchProfile(id: string, p: { bio: string; orcid: string | null; scholarUrl: string | null; openToCollab: boolean }) {
+  await db.update(users).set(p).where(eq(users.id, id));
+}
+
+/** OpenAlex nəticəsini yazır: göstəricilər istifadəçidə, nəşrlər ayrıca cədvəldə (tamamilə əvəz olunur) */
+export async function saveResearchSync(userId: string, openalexId: string | null, stats: ResearchStats | null, pubs: Omit<Publication, "id">[]) {
+  await db.update(users).set({ openalexId, researchStats: stats, pubsSyncedAt: new Date() }).where(eq(users.id, userId));
+  await db.delete(userPublications).where(eq(userPublications.userId, userId));
+  if (pubs.length) {
+    await db.insert(userPublications).values(pubs.map((p) => ({ ...p, id: `${userId}:${p.workId}`, userId })));
+  }
+}
+
+/** ORCID silinəndə nəşrlər və göstəricilər də təmizlənir */
+export async function clearResearchSync(userId: string) {
+  await db.update(users).set({ openalexId: null, researchStats: null, pubsSyncedAt: null }).where(eq(users.id, userId));
+  await db.delete(userPublications).where(eq(userPublications.userId, userId));
+}
+
+export async function listPublications(userId: string) {
+  return (await db.select().from(userPublications).where(eq(userPublications.userId, userId))).sort(
+    (a, b) => (b.year ?? 0) - (a.year ?? 0) || b.citedBy - a.citedBy,
+  ) as Publication[];
+}
+
+// ---------- Əməkdaşlıq təklifləri ----------
+
+type CollabRow = typeof collabRequests.$inferSelect;
+const toCollab = (r: CollabRow): CollabRequest => ({
+  ...r,
+  createdAt: r.createdAt.toISOString(),
+  respondedAt: iso(r.respondedAt),
+  requesterSeenAt: iso(r.requesterSeenAt),
+});
+
+export async function insertCollabRequest(r: { fromUserId: string; toUserId: string; topic: string; message: string }) {
+  await db.insert(collabRequests).values({ id: newId("cr"), ...r });
+}
+
+/** İstifadəçinin göndərdiyi və aldığı bütün təkliflər */
+export async function listCollabRequests(userId: string) {
+  const rows = await db
+    .select()
+    .from(collabRequests)
+    .where(or(eq(collabRequests.fromUserId, userId), eq(collabRequests.toUserId, userId)))
+    .orderBy(desc(collabRequests.createdAt));
+  return rows.map(toCollab);
+}
+
+export async function getCollabRequest(id: string) {
+  const [row] = await db.select().from(collabRequests).where(eq(collabRequests.id, id)).limit(1);
+  return row ? toCollab(row) : null;
+}
+
+/** Yalnız alıcı və yalnız gözləyən təklifə cavab verə bilər */
+export async function respondCollabRequest(id: string, toUserId: string, status: "accepted" | "declined") {
+  const updated = await db
+    .update(collabRequests)
+    .set({ status, respondedAt: new Date() })
+    .where(and(eq(collabRequests.id, id), eq(collabRequests.toUserId, toUserId), eq(collabRequests.status, "pending")))
+    .returning({ id: collabRequests.id });
+  return updated.length > 0;
+}
+
+export async function markCollabSeen(id: string, fromUserId: string) {
+  await db
+    .update(collabRequests)
+    .set({ requesterSeenAt: new Date() })
+    .where(and(eq(collabRequests.id, id), eq(collabRequests.fromUserId, fromUserId)));
+}
+
+export async function deleteCollabRequest(id: string, fromUserId: string) {
+  await db.delete(collabRequests).where(and(eq(collabRequests.id, id), eq(collabRequests.fromUserId, fromUserId), eq(collabRequests.status, "pending")));
 }

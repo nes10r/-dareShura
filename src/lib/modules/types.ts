@@ -1,4 +1,4 @@
-import type { User } from "../types";
+import type { CollabRequest, User } from "../types";
 
 /**
  * Dynamic Module Architecture
@@ -43,7 +43,10 @@ export type DashboardCard =
   | { kind: "survey"; key: string; priority: number; data: SurveyCardData }
   | { kind: "conferences"; key: string; priority: number; data: ConferencesCardData }
   | { kind: "grantInvite"; key: string; priority: number; data: GrantInviteCardData }
-  | { kind: "skillsNudge"; key: string; priority: number; data: { grantCount: number } };
+  | { kind: "skillsNudge"; key: string; priority: number; data: { grantCount: number } }
+  | { kind: "collabIncoming" | "collabAccepted"; key: string; priority: number; data: { request: CollabRequest; other: CollabCardPerson } };
+
+export type CollabCardPerson = { id: string; name: string; email: string; position: string; avatarUpdatedAt?: string | null };
 
 export interface GrantInviteCardData {
   groupId: string;
