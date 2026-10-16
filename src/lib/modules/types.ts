@@ -21,7 +21,7 @@ export interface ModuleContext {
 export type IconName =
   | "home" | "survey" | "user" | "settings" | "chart" | "plus" | "file"
   | "calendar" | "bell" | "check" | "clock" | "logout" | "arrow-right" | "x"
-  | "chevron-left" | "chevron-right" | "template" | "megaphone" | "lock" | "users" | "newspaper" | "pin" | "link" | "video" | "phone" | "briefcase";
+  | "chevron-left" | "chevron-right" | "template" | "megaphone" | "lock" | "users" | "newspaper" | "pin" | "link" | "video" | "phone" | "briefcase" | "pause" | "play" | "image" | "type";
 
 export interface NavLink {
   label: string;

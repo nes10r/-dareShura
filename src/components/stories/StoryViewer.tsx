@@ -106,6 +106,10 @@ export function StoryViewer({
       if (e.key === "Escape") onClose();
       if (e.key === "ArrowRight") next();
       if (e.key === "ArrowLeft") prev();
+      if (e.key === " ") {
+        e.preventDefault();
+        setPaused((p) => !p);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -145,9 +149,31 @@ export function StoryViewer({
 
   if (!group || !story) return null;
 
+  const hasPrev = si > 0 || gi > 0;
+  const hasNext = si < group.stories.length - 1 || gi < groups.length - 1;
+  const nextLabel = si < group.stories.length - 1 ? "Növbəti status" : gi < groups.length - 1 ? `Növbəti: ${groups[gi + 1].user.name}` : "";
+  const prevLabel = si > 0 ? "Əvvəlki status" : gi > 0 ? `Əvvəlki: ${groups[gi - 1].user.name}` : "";
+  const navBtn =
+    "hidden size-12 shrink-0 place-items-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/25 disabled:pointer-events-none disabled:opacity-0 sm:grid";
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black" role="dialog" aria-modal="true" aria-label={`${group.user.name} — status`}>
-      <div className="relative flex h-full w-full max-w-md flex-col overflow-hidden sm:h-[92dvh] sm:rounded-3xl">
+    <div
+      className="animate-fade fixed inset-0 z-[60] flex items-center justify-center bg-black sm:bg-neutral-950/90 sm:backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${group.user.name} — status`}
+    >
+      {/* Kompüter: səhifə səviyyəsində bağla düyməsi */}
+      <button type="button" onClick={onClose} className="absolute right-5 top-5 hidden size-11 place-items-center rounded-full text-white/80 hover:bg-white/10 hover:text-white sm:grid" aria-label="Bağla">
+        <Icon name="x" className="size-7" />
+      </button>
+
+      <div className="flex h-full w-full items-center justify-center gap-5 sm:h-auto">
+        <button type="button" onClick={prev} disabled={!hasPrev} className={navBtn} aria-label={prevLabel || "Əvvəlki"} title={prevLabel}>
+          <Icon name="chevron-left" className="size-7" />
+        </button>
+
+        <div className="relative flex h-full w-full max-w-md flex-col overflow-hidden sm:aspect-[9/16] sm:h-[min(88dvh,820px)] sm:w-auto sm:max-w-none sm:rounded-3xl sm:shadow-2xl">
         {/* Məzmun */}
         {story.kind === "text" ? (
           <div className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br p-8 ${STORY_BACKGROUNDS[story.bg]}`}>
@@ -165,7 +191,7 @@ export function StoryViewer({
 
         {/* Toxunma zonaları: sol 30% — əvvəlki, qalan — növbəti; basıb saxla — dayan */}
         <div
-          className="absolute inset-0 z-10"
+          className="absolute inset-0 z-10 cursor-pointer"
           onPointerDown={() => {
             held.current = false;
             holdTimer.current = setTimeout(() => {
@@ -201,8 +227,16 @@ export function StoryViewer({
               <span className="block truncate text-sm font-semibold">{own ? "Mənim statusum" : group.user.name}</span>
               <span className="block text-xs text-white/70">{timeAgo(story.createdAt)}</span>
             </span>
-            {paused && <span className="text-xs text-white/70">Dayandırılıb</span>}
-            <button type="button" onClick={onClose} className="grid size-10 place-items-center rounded-full hover:bg-white/10" aria-label="Bağla">
+            <button
+              type="button"
+              onClick={() => setPaused((p) => !p)}
+              className="grid size-10 place-items-center rounded-full hover:bg-white/10"
+              aria-label={paused ? "Davam et" : "Dayandır"}
+              title={paused ? "Davam et (Boşluq)" : "Dayandır (Boşluq)"}
+            >
+              <Icon name={paused ? "play" : "pause"} className="size-5" />
+            </button>
+            <button type="button" onClick={onClose} className="grid size-10 place-items-center rounded-full hover:bg-white/10 sm:hidden" aria-label="Bağla">
               <Icon name="x" className="size-6" />
             </button>
           </div>
@@ -253,7 +287,25 @@ export function StoryViewer({
             )}
           </div>
         )}
+        </div>
+
+        <button type="button" onClick={next} disabled={!hasNext} className={navBtn} aria-label={nextLabel || "Növbəti"} title={nextLabel}>
+          <Icon name="chevron-right" className="size-7" />
+        </button>
       </div>
+
+      {/* Kompüter: klaviatura ipucları */}
+      <p className="absolute bottom-5 left-1/2 hidden -translate-x-1/2 items-center gap-4 text-xs text-white/50 sm:flex">
+        <span>
+          <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-sans">←</kbd> <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-sans">→</kbd> keçid
+        </span>
+        <span>
+          <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-sans">Boşluq</kbd> dayandır
+        </span>
+        <span>
+          <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-sans">Esc</kbd> bağla
+        </span>
+      </p>
     </div>
   );
 }
