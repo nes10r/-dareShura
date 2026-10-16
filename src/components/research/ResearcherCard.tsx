@@ -51,7 +51,7 @@ export function ResearcherCard({ user, matched, me }: { user: User; matched: str
       )}
 
       {stats && (
-        <dl className="mt-auto grid grid-cols-3 gap-2 border-t border-line pt-3 text-center">
+        <dl className="mt-auto grid grid-cols-3 gap-2 border-t border-line pt-3 text-center" title="OpenAlex üzrə">
           {[
             ["Nəşr", stats.works],
             ["İstinad", stats.citations],

@@ -107,6 +107,21 @@ export default async function ResearcherPage({ params }: { params: Promise<{ id:
             ))}
           </dl>
         )}
+        {stats && (
+          <p className="mt-1.5 flex flex-wrap items-center justify-center gap-x-1.5 text-[11px] text-muted sm:justify-start">
+            <span title="İstinadlar DOI üzrə OpenAlex açıq bazasından hesablanır; Google Scholar-dakı rəqəmlərdən fərqlənə bilər">
+              İstinad və indekslər OpenAlex üzrə
+            </span>
+            {user.scholarUrl && (
+              <>
+                ·
+                <a href={user.scholarUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-sky-700 underline underline-offset-2">
+                  Google Scholar göstəriciləri
+                </a>
+              </>
+            )}
+          </p>
+        )}
 
         {/* Əməkdaşlıq */}
         <div className="mt-5">
