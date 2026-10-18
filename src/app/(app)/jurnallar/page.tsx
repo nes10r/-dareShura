@@ -13,7 +13,7 @@ import type { Journal } from "@/lib/types";
 export const metadata: Metadata = { title: "Jurnallar" };
 export const maxDuration = 60;
 
-type Params = { q?: string; scopus?: string; oa?: string; pulsuz?: string; unec?: string; sirala?: string };
+type Params = { q?: string; scopus?: string; oa?: string; pulsuz?: string; unec?: string; risksiz?: string; sirala?: string };
 
 const EXAMPLES = ["econometrics panel data", "machine learning finance", "renewable energy economics", "digital marketing", "supply chain management"];
 
@@ -23,7 +23,7 @@ const SORTS = [
   { key: "suret", label: "Sürət" },
 ] as const;
 
-function sortHits(hits: { journal: Journal; count: number }[], sort: string) {
+function sortHits<T extends { journal: Journal }>(hits: T[], sort: string): T[] {
   if (sort === "h") return [...hits].sort((a, b) => (b.journal.hIndex ?? -1) - (a.journal.hIndex ?? -1));
   if (sort === "suret") {
     const total = (j: Journal) => (j.speed?.acceptDays != null ? j.speed.acceptDays + (j.speed.publishDays ?? 0) : Infinity);
@@ -49,11 +49,14 @@ async function Results({ p, meId }: { p: Params; meId: string }) {
   const [suggestions, authors] = await Promise.all([listAllSkills(), findJournalAuthors(res.hits.map((h) => ({ id: h.journal.id, title: h.journal.title })))]);
   const withColleagues = res.hits.filter((h) => authors.get(h.journal.id)?.some((a) => a.userId !== meId)).length;
   let hits = res.hits;
+  const risky = res.hits.filter((h) => h.risks.length).length;
+  if (p.risksiz === "1") hits = hits.filter((h) => !h.risks.length);
   if (p.unec === "1") hits = hits.filter((h) => authors.get(h.journal.id)?.some((a) => a.userId !== meId));
   if (p.scopus === "1" && scopus) hits = hits.filter((h) => h.journal.scopus?.indexed && !h.journal.scopus.discontinuedAfter);
   if (p.oa === "1") hits = hits.filter((h) => h.journal.isOa);
-  // Abunə jurnallarında nəşr pulsuzdur (APC yalnız istəyə bağlı açıq giriş üçündür)
-  if (p.pulsuz === "1") hits = hits.filter((h) => h.journal.apcUsd === 0 || !h.journal.isOa);
+  // Ödənişsiz: APC 0 və ya hibrid jurnal (APC yalnız istəyə bağlı açıq giriş üçündür).
+  // APC məlumatı olmayan jurnallar daxil edilmir — "pulsuz" demək üçün əsas yoxdur.
+  if (p.pulsuz === "1") hits = hits.filter((h) => h.journal.apcUsd === 0 || (!h.journal.isOa && h.journal.apcUsd != null));
   hits = sortHits(hits, p.sirala ?? "");
 
   const href = (patch: Partial<Params>) => {
@@ -84,6 +87,11 @@ async function Results({ p, meId }: { p: Params; meId: string }) {
             <Icon name="users" className="size-4" /> Həmkarlar dərc edib · {withColleagues}
           </Link>
         )}
+        {risky > 0 && (
+          <Link prefetch={false} href={href({ risksiz: p.risksiz === "1" ? "" : "1" })} className={chip(p.risksiz === "1")} aria-pressed={p.risksiz === "1"} title="Risk nişanı olan jurnalları gizlət">
+            Risk nişanlılarını gizlət · {risky}
+          </Link>
+        )}
         <span className="mx-1 hidden h-5 w-px bg-line sm:block" />
         {SORTS.map((s) => (
           <Link key={s.key} prefetch={false} href={href({ sirala: s.key })} className={`inline-flex h-9 items-center rounded-full px-3 text-sm ${(p.sirala ?? "") === s.key ? "bg-ink font-semibold text-white" : "text-slate-600 hover:bg-white"}`}>
@@ -98,7 +106,7 @@ async function Results({ p, meId }: { p: Params; meId: string }) {
       {hits.length ? (
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           {hits.map((h) => (
-            <JournalCard key={h.journal.id} j={h.journal} count={h.count} scopusEnabled={scopus} suggestions={suggestions} authors={authors.get(h.journal.id)} meId={meId} />
+            <JournalCard key={h.journal.id} j={h.journal} count={h.count} scopusEnabled={scopus} suggestions={suggestions} authors={authors.get(h.journal.id)} meId={meId} risks={h.risks} />
           ))}
         </div>
       ) : (
@@ -108,7 +116,7 @@ async function Results({ p, meId }: { p: Params; meId: string }) {
         </div>
       )}
       <p className="mt-6 text-xs leading-relaxed text-muted">
-        Mənbələr: OpenAlex (uyğunluq, h-indeks, açıq giriş, APC), Crossref (nəşr sürəti){scopus ? ", Scopus API (indeks, CiteScore, kvartil)" : ""}. WoS statusu Clarivate Master Journal List-də yoxlanılır.
+        Mənbələr: OpenAlex (uyğunluq, h-indeks, açıq giriş, APC), Crossref (nəşr sürəti), Retraction Watch (saxta saytlar){scopus ? ", Scopus API (indeks, CiteScore, kvartil)" : ""}. WoS statusu Clarivate Master Journal List-də yoxlanılır.
         Jurnal seçməzdən əvvəl rəsmi saytı yoxlayın.
       </p>
     </>

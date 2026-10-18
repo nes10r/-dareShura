@@ -89,6 +89,7 @@ Superadmin şifrəsi `SUPERADMIN_PASSWORD` mühit dəyişənindən götürülür
 - Hər jurnal: Scopus statusu, CiteScore və kvartil (`SCOPUS_API_KEY` varsa Scopus Serial Title API; yoxdursa Scimago linki), WoS — Clarivate Master Journal List linki, açıq giriş/DOAJ, APC, h-indeks, 2 illik orta istinad.
 - Nəşr sürəti: Crossref-dəki son 60 məqalənin göndərilmə/qəbul/onlayn tarixlərinin medianı. Springer, Wiley, Taylor & Francis paylaşır; Elsevier və MDPI paylaşmır.
 - "UNEC-dən burada dərc edənlər": üzvlərin ORCID/OpenAlex nəşrləri jurnalın OpenAlex ID-si (uyğun gəlməzsə — adı) ilə uyğunlaşdırılır; həmkarın adına klikləyəndə profilində «Jurnal» haqqında sual mövzusu ilə əməkdaşlıq təklifi hazır açılır. "Həmkarlar dərc edib" filtri.
+- Risk nişanları (hökm deyil, yoxlamağa dəvət; hər birinin izahı və mənbəyi var): saxta (klon) saytı olan jurnal — Retraction Watch Hijacked Journal Checker (xlsx, həftədə bir yenilənir, `app_state`-də saxlanılır); Scopus-dan çıxarılıb (bütün ISSN-lər yoxlanılır — ad dəyişikliyi səhv nişan yaratmır); ödənişli açıq giriş, amma DOAJ-da deyil; məqalə sayı 3 ildə ≥2,5 dəfə artıb (≥200 məqalə) və 2 illik orta istinad < 1,5. "Risk nişanlılarını gizlət" filtri.
 - `/jurnallar/cagirislar`: xüsusi buraxılış çağırışları lenti. Nəşriyyat saytları serverdən avtomatik oxumağı bloklayır (Elsevier, MDPI, Wiley — 403, Springer — JS yoxlaması), ona görə çağırışları üzvlər paylaşır; jurnal kartında nəşriyyatın xüsusi buraxılışlar səhifəsinə link var. Son tarix keçəndə gizlənir, sahəsi uyğun üzvlərə dashboard-da göstərilir.
 
 ## Dynamic Module Architecture

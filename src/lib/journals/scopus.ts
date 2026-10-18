@@ -40,8 +40,12 @@ export async function fetchScopus(issns: string[]): Promise<ScopusInfo | null> {
   const key = process.env.SCOPUS_API_KEY;
   if (!key || !issns.length) return null;
   const checkedAt = new Date().toISOString();
+  // Ad dəyişəndə köhnə ISSN köhnə Scopus qeydinə aparır (məs. Palgrave Communications → HSSC):
+  // bütün ISSN-lər yoxlanılır, əhatəsi ən son ilə qədər olan qeyd seçilir
+  type Found = ScopusInfo & { coverageEnd: number | null };
+  const found: Found[] = [];
 
-  for (const issn of issns.slice(0, 2)) {
+  for (const issn of issns.slice(0, 3)) {
     const res = await fetch(`https://api.elsevier.com/content/serial/title/issn/${encodeURIComponent(issn)}?view=CITESCORE`, {
       headers: { "X-ELS-APIKey": key, Accept: "application/json" },
       signal: AbortSignal.timeout(10_000),
@@ -65,7 +69,7 @@ export async function fetchScopus(issns: string[]): Promise<ScopusInfo | null> {
     }, null);
     const sjr = [...(e.SJRList?.SJR ?? [])].sort((a, b) => (num(b["@year"]) ?? 0) - (num(a["@year"]) ?? 0))[0];
 
-    return {
+    found.push({
       indexed: true,
       discontinuedAfter: endYear && endYear < thisYear - 1 ? endYear : null,
       citeScore: num(e.citeScoreYearInfoList?.citeScoreCurrentMetric),
@@ -75,7 +79,10 @@ export async function fetchScopus(issns: string[]): Promise<ScopusInfo | null> {
       subjects: (e["subject-area"] ?? []).map((s) => s.$ ?? "").filter(Boolean).slice(0, 4),
       sourceUrl: e["source-id"] ? `https://www.scopus.com/sourceid/${e["source-id"]}` : (e.link?.find((l) => l["@ref"] === "scopus-source")?.["@href"] ?? null),
       checkedAt,
-    };
+      coverageEnd: endYear,
+    });
   }
-  return { indexed: false, checkedAt };
+  if (!found.length) return { indexed: false, checkedAt };
+  const { coverageEnd: _c, ...info } = found.sort((a, b) => (b.coverageEnd ?? 9999) - (a.coverageEnd ?? 9999))[0];
+  return info;
 }

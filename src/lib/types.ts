@@ -377,6 +377,7 @@ export interface Journal {
   hIndex: number | null;
   meanCitedness: number | null;
   worksCount: number | null;
+  worksByYear: Record<string, number> | null;
   listedIn: string[];
   callsUrl: string | null;
   scopus: ScopusInfo | null;

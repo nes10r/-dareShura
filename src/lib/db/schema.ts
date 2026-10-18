@@ -360,6 +360,8 @@ export const journals = pgTable("journals", {
   /** 2 illik orta istinad (Impact Factor-a bənzər) */
   meanCitedness: text("mean_citedness"),
   worksCount: integer("works_count"),
+  /** İllər üzrə məqalə sayı (son 6 il) — qəfil artımı aşkar etmək üçün */
+  worksByYear: jsonb("works_by_year").$type<Record<string, number> | null>(),
   listedIn: jsonb("listed_in").$type<string[]>().notNull().default([]),
   /** Nəşriyyat saytında jurnalın xüsusi buraxılışlar/çağırışlar səhifəsi (məlum nəşriyyatlar üçün) */
   callsUrl: text("calls_url"),

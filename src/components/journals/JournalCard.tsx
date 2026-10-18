@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { Avatar } from "@/components/ui/Avatar";
 import type { JournalAuthor } from "@/lib/db/repo";
+import type { RiskFlag } from "@/lib/journals/risk";
 import { avatarUrl } from "@/lib/format";
 import type { Journal } from "@/lib/types";
 import { ShareCallButton } from "./ShareCallButton";
@@ -75,9 +76,39 @@ function Colleagues({ j, authors, meId }: { j: Journal; authors: JournalAuthor[]
   );
 }
 
+/** Risk nişanları: qırmızı — ciddi (saxta sayt, Scopus-dan çıxarılma), sarı — diqqət */
+function Risks({ flags }: { flags: RiskFlag[] }) {
+  return (
+    <ul className="mt-3 space-y-1.5">
+      {flags.map((f) => (
+        <li key={f.code}>
+          <details className={`group rounded-xl px-3 py-2 ring-1 ${f.level === "high" ? "bg-red-50 text-red-900 ring-red-200" : "bg-amber-50 text-amber-900 ring-amber-200"}`}>
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+              <span aria-hidden="true">{f.level === "high" ? "⛔" : "⚠️"}</span>
+              <span className="flex-1">{f.title}</span>
+              <Icon name="chevron-right" className="size-4 shrink-0 opacity-60 transition group-open:rotate-90" />
+            </summary>
+            <p className="mt-1.5 text-xs leading-relaxed opacity-90">{f.detail}</p>
+            {f.links && (
+              <p className="mt-1.5 flex flex-wrap gap-x-3 text-xs font-semibold">
+                {f.links.map((l) => (
+                  <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                    {l.label}
+                  </a>
+                ))}
+              </p>
+            )}
+          </details>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function JournalCard({
   j,
   count,
+  risks = [],
   scopusEnabled,
   suggestions,
   authors = [],
@@ -89,11 +120,12 @@ export function JournalCard({
   suggestions: string[];
   authors?: JournalAuthor[];
   meId: string;
+  risks?: RiskFlag[];
 }) {
   const issn = j.issnL ?? j.issn[0];
   const sp = j.speed;
   return (
-    <article className="flex h-full flex-col rounded-2xl bg-white p-4 ring-1 ring-line sm:p-5">
+    <article className={`flex h-full flex-col rounded-2xl bg-white p-4 ring-1 sm:p-5 ${risks.some((r) => r.level === "high") ? "ring-red-300" : "ring-line"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-[17px] font-semibold leading-snug">
@@ -130,8 +162,11 @@ export function JournalCard({
         {j.isOa ? (
           <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-200">Açıq giriş{j.inDoaj ? " · DOAJ" : ""}</span>
         ) : (
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600" title="Abunə jurnalı: nəşr ödənişsizdir">
-            Abunə · nəşr pulsuz
+          <span
+            className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600"
+            title={j.apcUsd != null ? "Abunə/hibrid jurnal: adi yolla nəşr ödənişsizdir, açıq giriş istəyə bağlıdır" : "Nəşr haqqı barədə məlumat yoxdur — jurnalın saytında yoxlayın"}
+          >
+            {j.apcUsd != null ? "Abunə · nəşr pulsuz" : "Abunə (APC məlumatı yoxdur)"}
           </span>
         )}
         {j.apcUsd != null && (
@@ -140,6 +175,8 @@ export function JournalCard({
           </span>
         )}
       </div>
+
+      {risks.length > 0 && <Risks flags={risks} />}
 
       {authors.length > 0 && <Colleagues j={j} authors={authors} meId={meId} />}
 

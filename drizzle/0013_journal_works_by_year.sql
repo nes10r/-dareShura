@@ -1,0 +1,1 @@
+ALTER TABLE "journals" ADD COLUMN "works_by_year" jsonb;

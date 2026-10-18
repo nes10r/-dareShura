@@ -42,6 +42,7 @@ interface OaSource {
   works_count: number;
   listed_in?: string[] | null;
   summary_stats?: { h_index?: number; "2yr_mean_citedness"?: number };
+  counts_by_year?: { year: number; works_count: number }[];
 }
 
 /**
@@ -62,7 +63,7 @@ export async function fetchSources(ids: string[]): Promise<JournalUpsert[]> {
   if (!ids.length) return [];
   const r = await getJson<{ results: OaSource[] }>(
     `${API}/sources?filter=ids.openalex:${ids.join("|")}&per-page=${ids.length}` +
-      "&select=id,display_name,issn_l,issn,host_organization_name,homepage_url,is_oa,is_in_doaj,apc_usd,works_count,listed_in,summary_stats",
+      "&select=id,display_name,issn_l,issn,host_organization_name,homepage_url,is_oa,is_in_doaj,apc_usd,works_count,listed_in,summary_stats,counts_by_year",
   );
   return (r.results ?? []).map((s) => ({
     id: s.id.split("/").pop()!,
@@ -77,6 +78,7 @@ export async function fetchSources(ids: string[]): Promise<JournalUpsert[]> {
     hIndex: s.summary_stats?.h_index ?? null,
     meanCitedness: s.summary_stats?.["2yr_mean_citedness"] != null ? Math.round(s.summary_stats["2yr_mean_citedness"] * 100) / 100 : null,
     worksCount: s.works_count ?? null,
+    worksByYear: Object.fromEntries((s.counts_by_year ?? []).slice(0, 6).map((c) => [String(c.year), c.works_count])),
     listedIn: s.listed_in ?? [],
     callsUrl: callsUrlOf(s.homepage_url),
   }));
