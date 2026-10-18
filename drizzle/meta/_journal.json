@@ -85,6 +85,13 @@
       "when": 1792178006364,
       "tag": "0011_journals",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792334706901,
+      "tag": "0012_publication_source",
+      "breakpoints": true
     }
   ]
 }

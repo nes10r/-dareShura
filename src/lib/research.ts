@@ -69,7 +69,7 @@ interface OaWork {
   type: string | null;
   cited_by_count: number;
   open_access?: { is_oa?: boolean; oa_url?: string | null };
-  primary_location?: { landing_page_url?: string | null; source?: { display_name?: string | null } | null } | null;
+  primary_location?: { landing_page_url?: string | null; source?: { id?: string | null; display_name?: string | null } | null } | null;
 }
 
 export interface OrcidSyncResult {
@@ -90,6 +90,7 @@ function fromOpenAlex(w: OaWork): Pub {
     title: w.display_name!.slice(0, 500),
     year: w.publication_year,
     venue: w.primary_location?.source?.display_name ?? null,
+    sourceId: w.primary_location?.source?.id?.split("/").pop() ?? null,
     doi: cleanDoi(w.doi),
     url: w.doi ?? w.open_access?.oa_url ?? w.primary_location?.landing_page_url ?? null,
     type: w.type,
@@ -147,6 +148,7 @@ async function fetchOrcidWorks(orcid: string): Promise<Pub[] | null> {
           title: title.slice(0, 500),
           year,
           venue: w["journal-title"]?.value?.trim() || null,
+          sourceId: null,
           doi,
           url: doi ? `https://doi.org/${doi}` : (w.url?.value ?? null),
           type: w.type ? (ORCID_TYPES[w.type] ?? w.type) : null,
@@ -234,7 +236,7 @@ export async function fetchByOrcid(orcid: string): Promise<OrcidSyncResult> {
     const m = (p.doi && byDoi.get(p.doi)) || byTitle.get(titleKey(p.title));
     if (!m || used.has(m.workId)) return p;
     used.add(m.workId);
-    return { ...p, workId: m.workId, venue: p.venue ?? m.venue, url: p.url ?? m.url, citedBy: m.citedBy, openAccess: m.openAccess, year: p.year ?? m.year };
+    return { ...p, workId: m.workId, venue: p.venue ?? m.venue, sourceId: m.sourceId, url: p.url ?? m.url, citedBy: m.citedBy, openAccess: m.openAccess, year: p.year ?? m.year };
   });
   for (const p of oaWorks) if (!used.has(p.workId)) merged.push(p);
   // Eyni iş ORCID-də bir neçə dəfə ola bilər — DOI/başlıq üzrə təkrarları at

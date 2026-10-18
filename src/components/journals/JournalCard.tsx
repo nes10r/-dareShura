@@ -1,4 +1,8 @@
+import Link from "next/link";
 import { Icon } from "@/components/Icon";
+import { Avatar } from "@/components/ui/Avatar";
+import type { JournalAuthor } from "@/lib/db/repo";
+import { avatarUrl } from "@/lib/format";
 import type { Journal } from "@/lib/types";
 import { ShareCallButton } from "./ShareCallButton";
 
@@ -38,7 +42,54 @@ function ScopusBadge({ j, enabled }: { j: Journal; enabled: boolean }) {
   );
 }
 
-export function JournalCard({ j, count, scopusEnabled, suggestions }: { j: Journal; count: number; scopusEnabled: boolean; suggestions: string[] }) {
+/** "UNEC-dən kim burada dərc edib?" — həmkara rəy prosesi barədə sual vermək üçün profilə keçid */
+function Colleagues({ j, authors, meId }: { j: Journal; authors: JournalAuthor[]; meId: string }) {
+  const SHOW = 4;
+  const topic = `«${j.title}» haqqında sual`.slice(0, 80);
+  const others = authors.filter((a) => a.userId !== meId);
+  const me = authors.find((a) => a.userId === meId);
+  return (
+    <div className="mt-3 rounded-xl bg-emerald-50/70 p-3 ring-1 ring-emerald-200">
+      <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-900">
+        <Icon name="users" className="size-4" /> UNEC-dən burada dərc edənlər · {authors.length}
+      </p>
+      <ul className="mt-2 flex flex-wrap gap-1.5">
+        {others.slice(0, SHOW).map((a) => (
+          <li key={a.userId}>
+            <Link
+              href={`/tedqiqatcilar/${a.userId}?movzu=${encodeURIComponent(topic)}`}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white py-0.5 pl-0.5 pr-2.5 text-sm ring-1 ring-emerald-200 transition hover:ring-emerald-400"
+              title={`${a.count} məqalə${a.lastYear ? `, sonuncu ${a.lastYear}` : ""} — rəy prosesi barədə soruşun`}
+            >
+              <Avatar name={a.name} src={avatarUrl({ id: a.userId, avatarUpdatedAt: a.avatarUpdatedAt })} size="xs" />
+              <span className="font-medium">{a.name}</span>
+              <span className="text-xs text-muted">{a.lastYear ?? ""}</span>
+            </Link>
+          </li>
+        ))}
+        {others.length > SHOW && <li className="self-center text-xs font-medium text-emerald-900">+{others.length - SHOW}</li>}
+        {me && <li className="self-center rounded-full bg-emerald-700 px-2.5 py-0.5 text-xs font-semibold text-white">Siz də ({me.count})</li>}
+      </ul>
+      {others.length > 0 && <p className="mt-1.5 text-[11px] text-emerald-900/80">Rəy prosesi və redaktorlar barədə soruşmaq üçün həmkarın adına klikləyin</p>}
+    </div>
+  );
+}
+
+export function JournalCard({
+  j,
+  count,
+  scopusEnabled,
+  suggestions,
+  authors = [],
+  meId,
+}: {
+  j: Journal;
+  count: number;
+  scopusEnabled: boolean;
+  suggestions: string[];
+  authors?: JournalAuthor[];
+  meId: string;
+}) {
   const issn = j.issnL ?? j.issn[0];
   const sp = j.speed;
   return (
@@ -89,6 +140,8 @@ export function JournalCard({ j, count, scopusEnabled, suggestions }: { j: Journ
           </span>
         )}
       </div>
+
+      {authors.length > 0 && <Colleagues j={j} authors={authors} meId={meId} />}
 
       <dl className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-surface p-2.5 text-center">
         <div title="Göndərilmədən qəbula qədər (median)">

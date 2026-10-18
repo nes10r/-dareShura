@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { and, asc, count, desc, eq, gt, inArray, isNull, lte, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, isNotNull, isNull, lte, or } from "drizzle-orm";
 import { facultyList } from "../faculties";
 import { skillList } from "../skills";
 import type { AnswerValue, BookChapter, BookProject, BookRequest, CollabRequest, Journal, JournalCall, Conference, ConferenceOverrides, Grant, GrantGroup, GrantInvitation, GrantOverrides, Invite, NewsItem, Publication, ResearchStats, Survey, SurveyResponse, User } from "../types";
@@ -864,4 +864,46 @@ export async function deleteCall(id: string) {
 /** Son tarixi 30 gündən çox əvvəl keçmiş çağırışlar silinir */
 export async function purgeOldCalls(now = new Date()) {
   await db.delete(journalCalls).where(lte(journalCalls.deadline, new Date(now.getTime() - 30 * 86_400_000)));
+}
+
+/** "The Journal of X & Y" → "journalofxandy": jurnal adlarını müqayisə üçün */
+export const journalKey = (s: string) =>
+  s.toLocaleLowerCase("en").replace(/&/g, "and").replace(/^the\s+/, "").replace(/[^\p{L}\p{N}]+/gu, "");
+
+export interface JournalAuthor {
+  userId: string;
+  name: string;
+  avatarUpdatedAt: string | null;
+  count: number;
+  lastYear: number | null;
+}
+
+/**
+ * Üzvlərdən kimlər bu jurnallarda dərc edib: OpenAlex jurnal ID-si ilə dəqiq, uyğun gəlməzsə
+ * (yalnız ORCID-də olan və ya hələ yenilənməmiş işlər) — jurnal adı ilə.
+ */
+export async function findJournalAuthors(list: { id: string; title: string }[]): Promise<Map<string, JournalAuthor[]>> {
+  const out = new Map<string, JournalAuthor[]>();
+  if (!list.length) return out;
+  const rows = await db
+    .select({ userId: userPublications.userId, sourceId: userPublications.sourceId, venue: userPublications.venue, year: userPublications.year, name: users.name, avatarUpdatedAt: users.avatarUpdatedAt, role: users.role })
+    .from(userPublications)
+    .innerJoin(users, eq(users.id, userPublications.userId))
+    .where(or(inArray(userPublications.sourceId, list.map((j) => j.id)), isNotNull(userPublications.venue)));
+
+  const byKey = new Map(list.map((j) => [journalKey(j.title), j.id]));
+  const acc = new Map<string, Map<string, JournalAuthor>>();
+  for (const r of rows) {
+    if (r.role === "SUPER_ADMIN") continue;
+    const jid = r.sourceId && list.some((j) => j.id === r.sourceId) ? r.sourceId : r.venue ? byKey.get(journalKey(r.venue)) : undefined;
+    if (!jid) continue;
+    const m = acc.get(jid) ?? new Map<string, JournalAuthor>();
+    const a = m.get(r.userId) ?? { userId: r.userId, name: r.name, avatarUpdatedAt: iso(r.avatarUpdatedAt), count: 0, lastYear: null };
+    a.count += 1;
+    a.lastYear = Math.max(a.lastYear ?? 0, r.year ?? 0) || null;
+    m.set(r.userId, a);
+    acc.set(jid, m);
+  }
+  for (const [jid, m] of acc) out.set(jid, [...m.values()].sort((a, b) => (b.lastYear ?? 0) - (a.lastYear ?? 0) || b.count - a.count));
+  return out;
 }

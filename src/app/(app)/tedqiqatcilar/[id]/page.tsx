@@ -44,8 +44,9 @@ function PublicationItem({ p }: { p: Publication }) {
   );
 }
 
-export default async function ResearcherPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ResearcherPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ movzu?: string }> }) {
   const { id } = await params;
+  const movzu = (await searchParams).movzu?.replace(/\s+/g, " ").trim().slice(0, 80) || undefined;
   const me = await requireUser();
   const user = await findUserById(id);
   if (!user) notFound();
@@ -145,7 +146,7 @@ export default async function ResearcherPage({ params }: { params: Promise<{ id:
               «{pendingOut.topic}» mövzusunda təklifiniz cavab gözləyir · {formatDate(pendingOut.createdAt)}
             </p>
           ) : (
-            <CollabRequestButton toUserId={user.id} toName={user.name} topics={user.skills ?? []} shared={shared} full />
+            <CollabRequestButton toUserId={user.id} toName={user.name} topics={user.skills ?? []} shared={shared} defaultTopic={movzu} full />
           )}
         </div>
       </section>

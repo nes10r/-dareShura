@@ -255,13 +255,14 @@ export const userPublications = pgTable(
     title: text("title").notNull(),
     year: integer("year"),
     venue: text("venue"),
+    sourceId: text("source_id"),
     doi: text("doi"),
     url: text("url"),
     type: text("type"),
     citedBy: integer("cited_by").notNull().default(0),
     openAccess: boolean("open_access").notNull().default(false),
   },
-  (t) => [index("user_publications_user_idx").on(t.userId, t.year)],
+  (t) => [index("user_publications_user_idx").on(t.userId, t.year), index("user_publications_source_idx").on(t.sourceId)],
 );
 
 export const collabRequests = pgTable(

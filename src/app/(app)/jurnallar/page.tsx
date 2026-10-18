@@ -5,7 +5,7 @@ import { JournalCard } from "@/components/journals/JournalCard";
 import { JournalTabs } from "@/components/journals/JournalTabs";
 import { Icon } from "@/components/Icon";
 import { requireUser } from "@/lib/auth";
-import { listActiveCalls, listAllSkills } from "@/lib/db/repo";
+import { findJournalAuthors, listActiveCalls, listAllSkills } from "@/lib/db/repo";
 import { scopusEnabled } from "@/lib/journals/scopus";
 import { findJournals } from "@/lib/journals/service";
 import type { Journal } from "@/lib/types";
@@ -13,7 +13,7 @@ import type { Journal } from "@/lib/types";
 export const metadata: Metadata = { title: "Jurnallar" };
 export const maxDuration = 60;
 
-type Params = { q?: string; scopus?: string; oa?: string; pulsuz?: string; sirala?: string };
+type Params = { q?: string; scopus?: string; oa?: string; pulsuz?: string; unec?: string; sirala?: string };
 
 const EXAMPLES = ["econometrics panel data", "machine learning finance", "renewable energy economics", "digital marketing", "supply chain management"];
 
@@ -32,7 +32,7 @@ function sortHits(hits: { journal: Journal; count: number }[], sort: string) {
   return hits;
 }
 
-async function Results({ p }: { p: Params }) {
+async function Results({ p, meId }: { p: Params; meId: string }) {
   const q = (p.q ?? "").trim();
   let res: Awaited<ReturnType<typeof findJournals>>;
   try {
@@ -46,8 +46,10 @@ async function Results({ p }: { p: Params }) {
     );
   }
   const scopus = scopusEnabled();
-  const suggestions = await listAllSkills();
+  const [suggestions, authors] = await Promise.all([listAllSkills(), findJournalAuthors(res.hits.map((h) => ({ id: h.journal.id, title: h.journal.title })))]);
+  const withColleagues = res.hits.filter((h) => authors.get(h.journal.id)?.some((a) => a.userId !== meId)).length;
   let hits = res.hits;
+  if (p.unec === "1") hits = hits.filter((h) => authors.get(h.journal.id)?.some((a) => a.userId !== meId));
   if (p.scopus === "1" && scopus) hits = hits.filter((h) => h.journal.scopus?.indexed && !h.journal.scopus.discontinuedAfter);
   if (p.oa === "1") hits = hits.filter((h) => h.journal.isOa);
   // Abunə jurnallarında nəşr pulsuzdur (APC yalnız istəyə bağlı açıq giriş üçündür)
@@ -77,6 +79,11 @@ async function Results({ p }: { p: Params }) {
         <Link prefetch={false} href={href({ pulsuz: p.pulsuz === "1" ? "" : "1" })} className={chip(p.pulsuz === "1")} aria-pressed={p.pulsuz === "1"} title="Nəşr haqqı (APC) tələb etməyən jurnallar: ödənişsiz açıq giriş və ya abunə jurnalları">
           Nəşr haqqı yoxdur
         </Link>
+        {withColleagues > 0 && (
+          <Link prefetch={false} href={href({ unec: p.unec === "1" ? "" : "1" })} className={chip(p.unec === "1")} aria-pressed={p.unec === "1"} title="UNEC üzvlərinin dərc etdiyi jurnallar">
+            <Icon name="users" className="size-4" /> Həmkarlar dərc edib · {withColleagues}
+          </Link>
+        )}
         <span className="mx-1 hidden h-5 w-px bg-line sm:block" />
         {SORTS.map((s) => (
           <Link key={s.key} prefetch={false} href={href({ sirala: s.key })} className={`inline-flex h-9 items-center rounded-full px-3 text-sm ${(p.sirala ?? "") === s.key ? "bg-ink font-semibold text-white" : "text-slate-600 hover:bg-white"}`}>
@@ -91,7 +98,7 @@ async function Results({ p }: { p: Params }) {
       {hits.length ? (
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           {hits.map((h) => (
-            <JournalCard key={h.journal.id} j={h.journal} count={h.count} scopusEnabled={scopus} suggestions={suggestions} />
+            <JournalCard key={h.journal.id} j={h.journal} count={h.count} scopusEnabled={scopus} suggestions={suggestions} authors={authors.get(h.journal.id)} meId={meId} />
           ))}
         </div>
       ) : (
@@ -124,7 +131,7 @@ function ResultsSkeleton() {
 }
 
 export default async function JournalsPage({ searchParams }: { searchParams: Promise<Params> }) {
-  await requireUser();
+  const me = await requireUser();
   const p = await searchParams;
   const q = (p.q ?? "").trim();
   const calls = await listActiveCalls();
@@ -157,7 +164,7 @@ export default async function JournalsPage({ searchParams }: { searchParams: Pro
 
       {q.length >= 3 ? (
         <Suspense key={JSON.stringify(p)} fallback={<ResultsSkeleton />}>
-          <Results p={p} />
+          <Results p={p} meId={me.id} />
         </Suspense>
       ) : (
         <div className="mt-6 rounded-2xl bg-white p-5 ring-1 ring-line sm:p-6">

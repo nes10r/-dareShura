@@ -88,6 +88,7 @@ Superadmin şifrəsi `SUPERADMIN_PASSWORD` mühit dəyişənindən götürülür
 - `/jurnallar`: məqalənin mövzusu (ingiliscə daha dəqiq) → son 3 ildə bu mövzuda ən çox məqalə dərc edən jurnallar (OpenAlex `group_by`). Nəticə 7 gün, jurnal göstəriciləri 30 gün bazada keşlənir.
 - Hər jurnal: Scopus statusu, CiteScore və kvartil (`SCOPUS_API_KEY` varsa Scopus Serial Title API; yoxdursa Scimago linki), WoS — Clarivate Master Journal List linki, açıq giriş/DOAJ, APC, h-indeks, 2 illik orta istinad.
 - Nəşr sürəti: Crossref-dəki son 60 məqalənin göndərilmə/qəbul/onlayn tarixlərinin medianı. Springer, Wiley, Taylor & Francis paylaşır; Elsevier və MDPI paylaşmır.
+- "UNEC-dən burada dərc edənlər": üzvlərin ORCID/OpenAlex nəşrləri jurnalın OpenAlex ID-si (uyğun gəlməzsə — adı) ilə uyğunlaşdırılır; həmkarın adına klikləyəndə profilində «Jurnal» haqqında sual mövzusu ilə əməkdaşlıq təklifi hazır açılır. "Həmkarlar dərc edib" filtri.
 - `/jurnallar/cagirislar`: xüsusi buraxılış çağırışları lenti. Nəşriyyat saytları serverdən avtomatik oxumağı bloklayır (Elsevier, MDPI, Wiley — 403, Springer — JS yoxlaması), ona görə çağırışları üzvlər paylaşır; jurnal kartında nəşriyyatın xüsusi buraxılışlar səhifəsinə link var. Son tarix keçəndə gizlənir, sahəsi uyğun üzvlərə dashboard-da göstərilir.
 
 ## Dynamic Module Architecture

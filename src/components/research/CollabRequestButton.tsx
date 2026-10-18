@@ -15,16 +15,19 @@ export function CollabRequestButton({
   topics,
   shared,
   full = false,
+  defaultTopic,
 }: {
   toUserId: string;
   toName: string;
   topics: string[];
   shared: string[];
   full?: boolean;
+  /** Məs. jurnal kartından gələndə: «Jurnal» haqqında sual */
+  defaultTopic?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [topic, setTopic] = useState(shared[0] ?? "");
+  const [topic, setTopic] = useState(defaultTopic ?? shared[0] ?? "");
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -41,7 +44,7 @@ export function CollabRequestButton({
     };
   }, [open]);
 
-  const ordered = [...shared, ...topics.filter((t) => !shared.includes(t))];
+  const ordered = [...(defaultTopic ? [defaultTopic] : []), ...shared, ...topics.filter((t) => !shared.includes(t) && t !== defaultTopic)];
 
   function send() {
     setError(null);

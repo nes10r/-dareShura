@@ -268,6 +268,8 @@ export interface Publication {
   title: string;
   year: number | null;
   venue: string | null;
+  /** Jurnalın OpenAlex ID-si (S…); yalnız ORCID-də olan işlərdə null */
+  sourceId: string | null;
   doi: string | null;
   url: string | null;
   type: string | null;
